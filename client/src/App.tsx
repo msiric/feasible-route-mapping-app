@@ -109,6 +109,7 @@ const formatIntersection = (
 export const App = () => {
   const [shortestPath, setShortestPath] = useState<ShortestPath[]>([]);
   const [intersections, setIntersections] = useState<Intersection[]>([]);
+  const [isHidden, setIsHidden] = useState(false);
 
   const methods = useForm<FieldValues>({
     defaultValues: {
@@ -127,6 +128,8 @@ export const App = () => {
     setShortestPath(newShortestPath);
     setIntersections(newIntersections);
   };
+
+  const handleMenuToggle = () => setIsHidden(!isHidden);
 
   const fetchSegmentIsochrones = async (
     locations: Location[],
@@ -278,8 +281,12 @@ export const App = () => {
       <ThemeProvider theme={theme}>
         <FormProvider {...methods}>
           <Box>
-            <MenuCard handleFormSubmit={handleFormSubmit} />
-            <LegendCard />
+            <MenuCard
+              isHidden={isHidden}
+              handleMenuToggle={handleMenuToggle}
+              handleFormSubmit={handleFormSubmit}
+            />
+            <LegendCard isHidden={isHidden} />
             <Map shortestPath={shortestPath} intersections={intersections} />
           </Box>
         </FormProvider>

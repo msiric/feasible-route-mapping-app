@@ -104,3 +104,7 @@ code {
 .leaflet-marker-icon.leaflet-zoom-animated.leaflet-interactive.leaflet-marker-draggable {
   opacity: 1;
 }
+
+.leaflet-control-attribution.leaflet-control {
+  border-radius: 20px;
+}

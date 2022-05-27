@@ -1,4 +1,3 @@
-import * as React from "react";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -7,8 +6,14 @@ import { Typography } from "@mui/material";
 import classes from "@components/Legend/style.module.css";
 import { CompareArrows as DirectionIcon } from "@mui/icons-material";
 
-export const LegendCard = () => (
-  <Box className={classes.container}>
+interface LegendCardProps {
+  isHidden: boolean;
+}
+
+export const LegendCard = ({ isHidden }: LegendCardProps) => (
+  <Box
+    className={`${classes.container} ${isHidden && classes.containerHidden}`}
+  >
     <Box>
       <Card className={classes.card} variant="outlined">
         <CardContent>

@@ -1,7 +1,45 @@
 .container {
   width: 355px;
-  position: absolute;
+  position: fixed;
   left: 10px;
   top: 10px;
   z-index: 1001;
+  transition: 0.5s;
+}
+
+.containerHidden {
+  left: -355px;
+  transition: 0.5s;
+}
+
+.toggle {
+  width: 20px;
+  height: 40px;
+  right: 0;
+  position: absolute;
+  background: #121212;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #fff;
+  transition: 0.5s;
+}
+
+.toggleHidden {
+  width: 40px;
+  height: 40px;
+  right: -25px;
+  transition: 0.5s;
+}
+
+.icon {
+  transition: 0.3s;
+}
+
+.iconHidden {
+  transform: rotate(180deg);
+  transition: 0.3s;
 }
