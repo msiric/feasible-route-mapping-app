@@ -1,0 +1,199 @@
+import {
+  useFieldArray,
+  FieldError,
+  FieldValues,
+  useFormContext,
+} from "react-hook-form";
+import {
+  Box,
+  Button,
+  Divider,
+  IconButton,
+  List,
+  ListItem,
+  ListItemSecondaryAction,
+  Typography,
+} from "@mui/material";
+import { LoadingButton } from "@mui/lab";
+import {
+  Delete as DeleteIcon,
+  AddLocationAlt as AddLocationIcon,
+  HourglassEmpty as CalculateIcon,
+} from "@mui/icons-material";
+import { AutocompleteInput } from "@controls/Autocomplete";
+import { fetchAddress } from "@api/endpoints";
+import { SelectInput } from "@controls/Select";
+import classes from "@forms/RouteForm/style.module.css";
+import { TRANSPORTATION_MODE_OPTIONS } from "@util/options";
+import { DEFAULT_LOCATION_OPTIONS, Option } from "../../App";
+
+interface IsochroneFormProps {
+  handleFormSubmit: (value: FieldValues) => Promise<void>;
+}
+
+const MINIMUM_NUMBER_OF_WAYPOINTS = 2;
+
+const TIME_RANGES = Array(10)
+  .fill(1)
+  .map((item, index) => ({
+    value: (index + item) * 60,
+    label: `${item + index} ${index !== 0 ? "minutes" : "minute"}`,
+  }));
+
+const TRANSPORTATION_MODES = Object.values(TRANSPORTATION_MODE_OPTIONS).map(
+  (mode) => ({
+    value: mode.costing,
+    label: mode.label,
+  })
+);
+
+export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
+  const {
+    watch,
+    register,
+    control,
+    handleSubmit,
+    formState: { isSubmitting, errors },
+  } = useFormContext();
+
+  const { append, remove } = useFieldArray({
+    control,
+    name: "options",
+  });
+
+  const values = watch();
+
+  return (
+    <Box className={classes.container}>
+      <Typography className={classes.heading}>
+        Feasible route mapping
+      </Typography>
+      <form
+        noValidate
+        autoComplete="off"
+        onSubmit={handleSubmit(handleFormSubmit)}
+      >
+        <List>
+          {values.options.map((item: Option, index: number) => (
+            <Box
+              key={`${item.location?.lat}.${item.location?.lon}.${index}`}
+              className={classes.listWrapper}
+            >
+              <ListItem className={classes.listItem} disableGutters>
+                {index !== 0 && (
+                  <>
+                    <Divider
+                      className={classes.divider}
+                      orientation="vertical"
+                    />
+                    <Box className={classes.itemOptions}>
+                      <SelectInput
+                        {...register(`options.${index}.timeRange` as const, {
+                          required: true,
+                        })}
+                        control={control}
+                        label="Time range"
+                        options={TIME_RANGES}
+                        disabled={isSubmitting}
+                        error={!!errors.options?.[index]?.timeRange?.message}
+                        helperText={errors.options?.[index]?.timeRange?.message}
+                      />
+                      <SelectInput
+                        {...register(
+                          `options.${index}.transportationMode` as const,
+                          { required: true }
+                        )}
+                        control={control}
+                        label="Transportation mode"
+                        options={TRANSPORTATION_MODES}
+                        disabled={isSubmitting}
+                        error={
+                          !!errors.options?.[index]?.transportationMode?.message
+                        }
+                        helperText={
+                          errors.options?.[index]?.transportationMode?.message
+                        }
+                      />
+                    </Box>
+                    <Divider
+                      className={classes.divider}
+                      orientation="vertical"
+                    />
+                  </>
+                )}
+                <AutocompleteInput
+                  {...register(`options.${index}.location` as const, {
+                    required: true,
+                  })}
+                  label={`Location ${index + 1}`}
+                  fetchData={fetchAddress}
+                  identifier="display_name"
+                  control={control}
+                  disabled={isSubmitting}
+                  error={
+                    !!(errors.options?.[index]?.location as FieldError)?.message
+                  }
+                  helperText={
+                    (errors.options?.[index]?.location as FieldError)
+                      ?.message ?? ""
+                  }
+                />
+                {values.options.length > MINIMUM_NUMBER_OF_WAYPOINTS && (
+                  <ListItemSecondaryAction className={classes.deleteIcon}>
+                    <IconButton
+                      aria-label="Delete"
+                      onClick={() => remove(index)}
+                      disabled={isSubmitting}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                )}
+              </ListItem>
+            </Box>
+          ))}
+          <Divider className={classes.divider} />
+          <AutocompleteInput
+            {...register(`excludeLocations` as const, {})}
+            multiple
+            label="Exclude locations"
+            fetchData={fetchAddress}
+            identifier="display_name"
+            control={control}
+            disabled={isSubmitting}
+            error={!!errors.excludeLocations?.message}
+            helperText={errors.excludeLocations?.message}
+          />
+        </List>
+        <Box className={classes.actions}>
+          <Button
+            color="primary"
+            type="button"
+            variant="outlined"
+            size="small"
+            startIcon={<AddLocationIcon />}
+            onClick={() =>
+              append({
+                ...DEFAULT_LOCATION_OPTIONS,
+              })
+            }
+            disabled={isSubmitting}
+          >
+            Add waypoint
+          </Button>
+          <LoadingButton
+            color="primary"
+            type="submit"
+            size="small"
+            loading={isSubmitting}
+            loadingPosition="start"
+            startIcon={<CalculateIcon />}
+            variant="outlined"
+          >
+            Run calculation
+          </LoadingButton>
+        </Box>
+      </form>
+    </Box>
+  );
+};

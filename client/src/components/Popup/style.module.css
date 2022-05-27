@@ -1,0 +1,15 @@
+.popupContainer {
+  width: 155px;
+}
+
+.popupWrapper {
+  height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-around;
+}
+
+.button {
+  font-size: 8px;
+}
