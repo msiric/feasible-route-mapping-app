@@ -13,9 +13,10 @@
 }
 
 .toggle {
-  width: 20px;
+  width: 35px;
   height: 40px;
   right: 0;
+  top: 15px;
   position: absolute;
   background: #121212;
   border-top-right-radius: 20px;
