@@ -41,7 +41,7 @@ export const validationSchema = Yup.object().shape({
       transportationMode: Yup.string()
         .test(
           "isRequired",
-          "Transportation mode cannot be empty",
+          "Transport mode cannot be empty",
           (value, index) => {
             const id = findPathIndex(index.path);
             if (id !== "0") {
@@ -50,7 +50,7 @@ export const validationSchema = Yup.object().shape({
             return !value;
           }
         )
-        .test("isValid", "Transportation mode is invalid", (value, index) => {
+        .test("isValid", "Transport mode is invalid", (value, index) => {
           const id = findPathIndex(index.path);
           if (id !== "0") {
             return (

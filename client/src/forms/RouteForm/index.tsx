@@ -104,7 +104,7 @@ export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
                           { required: true }
                         )}
                         control={control}
-                        label="Transportation mode"
+                        label="Transport mode"
                         options={TRANSPORTATION_MODES}
                         disabled={isSubmitting}
                         error={

@@ -17,7 +17,7 @@
 .popperList {
   border-radius: 10px;
   max-height: 80px;
-  overflow: scroll;
+  overflow-y: auto;
 }
 
 .buttonGroup > .button:not(:last-of-type) {
