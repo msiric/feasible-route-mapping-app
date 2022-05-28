@@ -12,11 +12,24 @@
   transition: 0.5s;
 }
 
+.header {
+  padding-bottom: 0px;
+}
+
+.heading {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.content {
+  padding-top: 8px;
+}
+
 .toggle {
   width: 35px;
   height: 40px;
   right: 0;
-  top: 12px;
+  top: 10px;
   position: absolute;
   background: #121212;
   border-top-right-radius: 20px;

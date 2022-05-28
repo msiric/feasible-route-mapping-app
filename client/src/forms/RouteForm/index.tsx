@@ -65,15 +65,12 @@ export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
 
   return (
     <Box className={classes.container}>
-      <Typography className={classes.heading}>
-        Feasible route mapping
-      </Typography>
       <form
         noValidate
         autoComplete="off"
         onSubmit={handleSubmit(handleFormSubmit)}
       >
-        <List>
+        <List className={classes.list}>
           {values.options.map((item: Option, index: number) => (
             <Box
               key={`${item.location?.lat}.${item.location?.lon}.${index}`}

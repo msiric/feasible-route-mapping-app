@@ -1,23 +1,13 @@
 .container {
-  max-height: 380px;
+  max-height: 331px;
   overflow-y: auto;
-}
-
-.heading {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.listItem {
-  display: lex;
-  flex-direction: column;
 }
 
 .itemOptions {
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .divider {
@@ -33,12 +23,23 @@
   transform: translateY(25%);
 }
 
+.list {
+  padding-top: 4px;
+  padding-bottom: 5px;
+}
+
 .listWrapper:first-child .deleteIcon {
   top: 50%;
   -webkit-transform: translateY(-50%);
   -moz-transform: translateY(-50%);
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
+}
+
+.listItem {
+  display: lex;
+  flex-direction: column;
+  padding-top: 4px;
 }
 
 .actions {
