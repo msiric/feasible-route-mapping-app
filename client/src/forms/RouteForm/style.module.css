@@ -1,10 +1,10 @@
 .container {
-  max-height: 600px;
+  max-height: 380px;
   overflow-y: auto;
 }
 
 .heading {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
 }
 

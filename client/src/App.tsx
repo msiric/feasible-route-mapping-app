@@ -19,6 +19,7 @@ import { toErrorMessage } from "@util/error";
 import { OptionsObject, useSnackbar } from "notistack";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { validationSchema } from "@util/validation";
+import useWindowDimensions from "./hooks/useWindowDimensions";
 
 export const DEFAULT_LOCATION_OPTIONS = {
   location: null,
@@ -111,6 +112,8 @@ export const App = () => {
   const [intersections, setIntersections] = useState<Intersection[]>([]);
   const [isHidden, setIsHidden] = useState(false);
 
+  const { width } = useWindowDimensions();
+
   const methods = useForm<FieldValues>({
     defaultValues: {
       options: [{ location: null }, { ...DEFAULT_LOCATION_OPTIONS }],
@@ -123,10 +126,12 @@ export const App = () => {
 
   const setStateInBatch = (
     newShortestPath: ShortestPath[],
-    newIntersections: Intersection[]
+    newIntersections: Intersection[],
+    shouldHideMenu = false
   ) => {
     setShortestPath(newShortestPath);
     setIntersections(newIntersections);
+    if (shouldHideMenu) setIsHidden(true);
   };
 
   const handleMenuToggle = () => setIsHidden(!isHidden);
@@ -273,7 +278,7 @@ export const App = () => {
     }
     const shortestPath = await findShortestPath(params);
     const intersections = await findIsochroneIntersections(shortestPath);
-    setStateInBatch(shortestPath, intersections);
+    setStateInBatch(shortestPath, intersections, width <= 750);
   };
 
   return (
