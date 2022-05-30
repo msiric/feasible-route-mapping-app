@@ -119,6 +119,11 @@ export const TRANSPORTATION_MODE_PROPERTIES: TransportationModeOptions = {
   },
 };
 
+export const TIME_RANGE_OPTIONS = {
+  min: 0,
+  max: 20,
+};
+
 export const TRANSPORTATION_MODE_OPTIONS: CostingOptions = {
   bicycle: {
     costing: "bicycle",

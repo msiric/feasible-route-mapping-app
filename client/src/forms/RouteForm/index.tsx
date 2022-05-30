@@ -24,7 +24,7 @@ import { AutocompleteInput } from "@controls/Autocomplete";
 import { fetchAddress } from "@api/endpoints";
 import { SelectInput } from "@controls/Select";
 import classes from "@forms/RouteForm/style.module.css";
-import { TRANSPORTATION_MODE_OPTIONS } from "@util/options";
+import { TIME_RANGE_OPTIONS, TRANSPORTATION_MODE_OPTIONS } from "@util/options";
 import { DEFAULT_LOCATION_OPTIONS, Option } from "../../App";
 
 interface IsochroneFormProps {
@@ -33,12 +33,15 @@ interface IsochroneFormProps {
 
 const MINIMUM_NUMBER_OF_WAYPOINTS = 2;
 
-const TIME_RANGES = Array(10)
-  .fill(1)
-  .map((item, index) => ({
-    value: (index + item) * 60,
-    label: `${item + index} ${index !== 0 ? "minutes" : "minute"}`,
-  }));
+const TIME_RANGES = Array.from(
+  { length: TIME_RANGE_OPTIONS.max - TIME_RANGE_OPTIONS.min + 1 / 1 },
+  (_, i) => ({
+    value: (TIME_RANGE_OPTIONS.min + i) * 60,
+    label: `${TIME_RANGE_OPTIONS.min + i} ${
+      TIME_RANGE_OPTIONS.min + i !== 1 ? "minutes" : "minute"
+    }`,
+  })
+);
 
 const TRANSPORTATION_MODES = Object.values(TRANSPORTATION_MODE_OPTIONS).map(
   (mode) => ({

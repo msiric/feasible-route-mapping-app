@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import { TRANSPORTATION_MODE_OPTIONS } from "@util/options";
+import { TIME_RANGE_OPTIONS, TRANSPORTATION_MODE_OPTIONS } from "@util/options";
 
 const findPathIndex = (path: string) => path.split("[")[1].split("]")[0];
 
@@ -18,22 +18,24 @@ export const validationSchema = Yup.object().shape({
         })
         .test(
           "isMinimum",
-          "Time range cannot be less than one minute",
+          `Time range cannot be less than ${TIME_RANGE_OPTIONS.min} ${
+            TIME_RANGE_OPTIONS.min !== 1 ? "minutes" : "minute"
+          }`,
           (value, index) => {
             const id = findPathIndex(index.path);
             if (id !== "0") {
-              return !!value && value >= 60;
+              return !!value && value >= TIME_RANGE_OPTIONS.min * 60;
             }
             return !value;
           }
         )
         .test(
           "isMaximum",
-          "Time range cannot be greater than ten minutes",
+          `Time range cannot be greater than ${TIME_RANGE_OPTIONS.max} minutes`,
           (value, index) => {
             const id = findPathIndex(index.path);
             if (id !== "0") {
-              return !!value && value <= 600;
+              return !!value && value <= TIME_RANGE_OPTIONS.max * 60;
             }
             return !value;
           }
