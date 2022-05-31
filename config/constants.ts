@@ -1,8 +1,8 @@
 import dotenv from "dotenv";
+import { FRM_URL, VALHALLA_URL } from "./secret";
 
 dotenv.config();
 
-export const CLIENT_DOMAIN = process.env.CLIENT_URI || "http://localhost:3000";
+export const CLIENT_DOMAIN = process.env.CLIENT_URI || FRM_URL;
 
-export const VALHALLA_OSM_URL =
-  "http://ec2-35-157-151-151.eu-central-1.compute.amazonaws.com:8002";
+export const VALHALLA_OSM_URL = VALHALLA_URL;
