@@ -16,6 +16,7 @@ import {
   TRANSPORTATION_MODE_PROPERTIES,
 } from "@util/options";
 import { LatLngExpression, LatLngLiteral } from "leaflet";
+import { memo } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   LayerGroup,
@@ -28,11 +29,20 @@ import {
 import { Intersection, ShortestPath } from "src/App";
 import { Option, Location } from "../../App";
 
+interface IntersectionsProps {
+  intersections: Intersection[];
+}
+
+interface RouteProps {
+  shortestPath: ShortestPath[];
+}
+
 interface MapProps {
   shortestPath: ShortestPath[];
   intersections: Intersection[];
 }
 
+const MAP_CENTER_COORDINATES: LatLngExpression = [59.436696, 24.744644];
 const LEAFLET_TILES_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 const POLYGON_TOOLTIP_OPTIONS = (regionProperties: Properties) => [
@@ -97,7 +107,120 @@ const POLYLINE_TOOLTIP_OPTIONS = (
   },
 ];
 
-export const Map = ({ shortestPath, intersections }: MapProps) => {
+const Intersections = memo(({ intersections }: IntersectionsProps) => {
+  return (
+    <LayerGroup>
+      {intersections.map((intersection, index) => {
+        const reversedCoordinates = intersection.geometry.coordinates.map(
+          (coordinate) => [
+            (coordinate as LatLngExpression[])[1],
+            (coordinate as LatLngExpression[])[0],
+          ]
+        );
+        return (
+          <Polygon
+            key={`${intersection.properties?.area}.${index}`}
+            pathOptions={{
+              color: intersection.properties?.color,
+              fill: true,
+              fillColor: intersection.properties?.color,
+              fillOpacity: 1 / intersection.properties?.contour,
+            }}
+            positions={reversedCoordinates}
+          >
+            <MapTooltip
+              sticky={true}
+              options={POLYGON_TOOLTIP_OPTIONS(intersection.properties)}
+            />
+          </Polygon>
+        );
+      })}
+    </LayerGroup>
+  );
+});
+
+const Route = memo(({ shortestPath }: RouteProps) => {
+  const { getValues, setValue } = useFormContext();
+
+  const handleLocationShift = (id: number, coordinate: LatLngLiteral) => {
+    const values = getValues();
+
+    const { lat, lon } = formatLocation(coordinate);
+    const location = { lat, lon };
+
+    setValue(
+      "options",
+      values.options.map((item: Option, index: number) =>
+        id === index
+          ? {
+              ...item,
+              location: {
+                ...location,
+                display_name: `${location.lat},${location.lon}`,
+              },
+            }
+          : item
+      )
+    );
+  };
+
+  return (
+    <LayerGroup>
+      {shortestPath.map((segment, index) => (
+        <Box key={`${segment.locations[0]}.${segment.locations[1]}.${index}`}>
+          <Polyline
+            pathOptions={{
+              color:
+                TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
+                  .color,
+              weight: 5,
+              dashArray: "10",
+            }}
+            positions={segment.features}
+            pane="shadowPane"
+          >
+            <MapTooltip
+              sticky={true}
+              options={POLYLINE_TOOLTIP_OPTIONS(
+                TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode],
+                segment
+              )}
+            />
+          </Polyline>
+
+          <MapMarker
+            index={index}
+            position={segment.locations[0]}
+            isDraggable={false}
+            label={index + 1}
+            handleMarkerShift={handleLocationShift}
+          />
+          {index === shortestPath.length - 1 && (
+            <MapMarker
+              index={index + 1}
+              position={segment.locations[1]}
+              isDraggable={false}
+              label={index + 2}
+              handleMarkerShift={handleLocationShift}
+            />
+          )}
+        </Box>
+      ))}
+      {shortestPath[0]?.excludedLocations?.map((location, index) => (
+        <MapMarker
+          key={`${location.lat}.${location.lon}`}
+          type={MarkerType.EXCLUSION}
+          index={index}
+          position={location}
+          isDraggable={false}
+          handleMarkerShift={handleLocationShift}
+        />
+      ))}
+    </LayerGroup>
+  );
+});
+
+const Markers = () => {
   const { getValues, setValue, watch } = useFormContext();
 
   const values = watch();
@@ -144,97 +267,7 @@ export const Map = ({ shortestPath, intersections }: MapProps) => {
   };
 
   return (
-    <MapContainer
-      id="map"
-      center={[59.436696, 24.744644]}
-      zoom={13}
-      zoomControl={false}
-      style={{ height: "100vh", width: "100wh" }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url={LEAFLET_TILES_URL}
-      />
-      <ZoomControl position="topright" />
-      <LayerGroup>
-        {intersections.map((intersection, index) => {
-          const reversedCoordinates = intersection.geometry.coordinates.map(
-            (coordinate) => [
-              (coordinate as LatLngExpression[])[1],
-              (coordinate as LatLngExpression[])[0],
-            ]
-          );
-          return (
-            <Polygon
-              key={`${intersection.properties?.area}.${index}`}
-              pathOptions={{
-                color: intersection.properties?.color,
-                fill: true,
-                fillColor: intersection.properties?.color,
-                fillOpacity: 1 / intersection.properties?.contour,
-              }}
-              positions={reversedCoordinates}
-            >
-              <MapTooltip
-                sticky={true}
-                options={POLYGON_TOOLTIP_OPTIONS(intersection.properties)}
-              />
-            </Polygon>
-          );
-        })}
-      </LayerGroup>
-      <LayerGroup>
-        {shortestPath.map((segment, index) => (
-          <Box key={`${segment.locations[0]}.${segment.locations[1]}.${index}`}>
-            <Polyline
-              pathOptions={{
-                color:
-                  TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
-                    .color,
-                weight: 5,
-                dashArray: "10",
-              }}
-              positions={segment.features}
-              pane="shadowPane"
-            >
-              <MapTooltip
-                sticky={true}
-                options={POLYLINE_TOOLTIP_OPTIONS(
-                  TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode],
-                  segment
-                )}
-              />
-            </Polyline>
-
-            <MapMarker
-              index={index}
-              position={segment.locations[0]}
-              isDraggable={false}
-              label={index + 1}
-              handleMarkerShift={handleLocationShift}
-            />
-            {index === shortestPath.length - 1 && (
-              <MapMarker
-                index={index + 1}
-                position={segment.locations[1]}
-                isDraggable={false}
-                label={index + 2}
-                handleMarkerShift={handleLocationShift}
-              />
-            )}
-          </Box>
-        ))}
-        {shortestPath[0]?.excludedLocations?.map((location, index) => (
-          <MapMarker
-            key={`${location.lat}.${location.lon}`}
-            type={MarkerType.EXCLUSION}
-            index={index}
-            position={location}
-            isDraggable={false}
-            handleMarkerShift={handleLocationShift}
-          />
-        ))}
-      </LayerGroup>
+    <>
       <LayerGroup>
         {values.options.map(
           (item: Option, index: number) =>
@@ -265,7 +298,28 @@ export const Map = ({ shortestPath, intersections }: MapProps) => {
             )
         )}
       </LayerGroup>
+    </>
+  );
+};
+
+export const Map = memo(({ shortestPath, intersections }: MapProps) => {
+  return (
+    <MapContainer
+      id="map"
+      zoom={13}
+      zoomControl={false}
+      center={MAP_CENTER_COORDINATES}
+      style={{ height: "100vh", width: "100wh" }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url={LEAFLET_TILES_URL}
+      />
+      <ZoomControl position="topright" />
+      <Intersections intersections={intersections} />
+      <Route shortestPath={shortestPath} />
+      <Markers />
       <MapPopup />
     </MapContainer>
   );
-};
+});
