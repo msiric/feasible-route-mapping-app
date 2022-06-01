@@ -1,7 +1,7 @@
 import dotEnv from "dotenv";
 import path from "path";
 
-const rootDir = process.env.PWD ?? ".";
+const rootDir = process.cwd() ?? ".";
 
 dotEnv.config({
   path: path.resolve(rootDir, `.env.${process.env.NODE_ENV || "development"}`),
