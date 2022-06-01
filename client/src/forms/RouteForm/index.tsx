@@ -81,16 +81,20 @@ export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
               origin === index
                 ? {
                     ...item,
-                    location: {
-                      ...values.options[destination].location,
-                    },
+                    location: !!values.options[destination].location
+                      ? {
+                          ...values.options[destination].location,
+                        }
+                      : null,
                   }
                 : destination === index
                 ? {
                     ...item,
-                    location: {
-                      ...values.options[origin].location,
-                    },
+                    location: !!values.options[origin].location
+                      ? {
+                          ...values.options[origin].location,
+                        }
+                      : null,
                   }
                 : item
             )
