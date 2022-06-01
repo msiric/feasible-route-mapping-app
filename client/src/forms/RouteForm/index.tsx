@@ -58,10 +58,11 @@ export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { isSubmitting, errors },
   } = useFormContext();
 
-  const { append, remove, swap } = useFieldArray({
+  const { append, remove } = useFieldArray({
     control,
     name: "options",
   });
@@ -74,7 +75,26 @@ export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
     if (origin >= 0 && origin < values.options.length) {
       if (destination >= 0 && destination < values.options.length) {
         if (origin !== destination) {
-          swap(origin, destination);
+          setValue(
+            "options",
+            values.options.map((item: Option, index: number) =>
+              origin === index
+                ? {
+                    ...item,
+                    location: {
+                      ...values.options[destination].location,
+                    },
+                  }
+                : destination === index
+                ? {
+                    ...item,
+                    location: {
+                      ...values.options[origin].location,
+                    },
+                  }
+                : item
+            )
+          );
         }
       }
     }
