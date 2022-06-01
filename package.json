@@ -12,7 +12,9 @@
     "transpile:watch": "tsc -w",
     "postinstall": "yarn run transpile",
     "heroku-postbuild": "cd client && yarn install && yarn run build",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "nodemonConfig": {
     "ignore": [
@@ -34,5 +36,10 @@
     "nodemon": "^2.0.16",
     "tsc": "^2.0.4",
     "typescript": "^4.7.2"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.27.0",
+    "@typescript-eslint/parser": "^5.27.0",
+    "eslint": "^8.16.0"
   }
 }

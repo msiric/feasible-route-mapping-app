@@ -42,7 +42,9 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "craco eject",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "lint:fix": "eslint --fix src"
   },
   "eslintConfig": {
     "extends": [
