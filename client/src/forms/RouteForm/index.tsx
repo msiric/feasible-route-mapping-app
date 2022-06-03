@@ -52,7 +52,10 @@ const TRANSPORTATION_MODES = Object.values(TRANSPORTATION_MODE_OPTIONS).map(
   })
 );
 
-export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
+export const IsochroneForm = ({
+  shortestPath,
+  handleFormSubmit,
+}: IsochroneFormProps) => {
   const {
     watch,
     register,
@@ -133,6 +136,11 @@ export const IsochroneForm = ({ handleFormSubmit }: IsochroneFormProps) => {
                       error={!!errors.options?.[index]?.timeRange?.message}
                       helperText={errors.options?.[index]?.timeRange?.message}
                     />
+                    <Box>
+                      {`${(
+                        (shortestPath[index - 1]?.duration ?? 0) / 60
+                      ).toFixed(2)} min`}
+                    </Box>
                     <SelectInput
                       {...register(
                         `options.${index}.transportationMode` as const,

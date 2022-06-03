@@ -2,7 +2,7 @@ import Leaflet, { LatLngExpression } from "leaflet";
 import { MenuCard } from "@components/Menu";
 import { Map } from "@components/Map";
 import { calcArea, calcIntersection } from "@util/geometry";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Collapse, ThemeProvider } from "@mui/material";
 import theme from "@styles/theme";
 import { StyledEngineProvider } from "@mui/material/styles";
@@ -20,6 +20,7 @@ import { OptionsObject, useSnackbar } from "notistack";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { validationSchema } from "@util/validation";
 import useWindowDimensions from "./hooks/useWindowDimensions";
+import hash from "object-hash";
 
 export const DEFAULT_LOCATION_OPTIONS = {
   location: null,
@@ -77,6 +78,8 @@ const SNACKBAR_OPTIONS: OptionsObject = {
   TransitionComponent: Collapse,
 };
 
+const AUTO_HIDE_MENU_WIDTH = 750;
+
 const getColor = (value: number) => {
   const hue = ((1 - value) * 120).toString(10);
   return ["hsl(", hue, ",100%,50%)"].join("");
@@ -112,6 +115,8 @@ export const App = () => {
   const [intersections, setIntersections] = useState<Intersection[]>([]);
   const [isHidden, setIsHidden] = useState(false);
 
+  const valuesHash = useRef("");
+
   const { width } = useWindowDimensions();
 
   const methods = useForm<FieldValues>({
@@ -122,17 +127,10 @@ export const App = () => {
     mode: "onSubmit",
     resolver: yupResolver(validationSchema),
   });
-  const { enqueueSnackbar } = useSnackbar();
 
-  const setStateInBatch = (
-    newShortestPath: ShortestPath[],
-    newIntersections: Intersection[],
-    shouldHideMenu = false
-  ) => {
-    setShortestPath(newShortestPath);
-    setIntersections(newIntersections);
-    if (shouldHideMenu) setIsHidden(true);
-  };
+  const values = methods.watch();
+
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleMenuToggle = () => setIsHidden(!isHidden);
 
@@ -263,7 +261,7 @@ export const App = () => {
   };
 
   const handleFormSubmit = async (values: FieldValues) => {
-    setStateInBatch([], []);
+    setIntersections([]);
     const params = [];
     for (let i = 0; i < values.options.length - 1; i++) {
       const options: Option[] = values.options.slice(i, i + 2);
@@ -276,10 +274,39 @@ export const App = () => {
         )
       );
     }
-    const shortestPath = await findShortestPath(params);
     const intersections = await findIsochroneIntersections(shortestPath);
-    setStateInBatch(shortestPath, intersections, width <= 750);
+    setIntersections(intersections);
+    if (width <= AUTO_HIDE_MENU_WIDTH) setIsHidden(true);
   };
+
+  const calculateShortestDistance = async () => {
+    const params = [];
+    for (let i = 0; i < values.options.length - 1; i++) {
+      if (values.options[i].location && values.options[i + 1].location) {
+        const options: Option[] = values.options.slice(i, i + 2);
+        params.push(
+          applyTransportationMode(
+            values.options[i + 1].transportationMode,
+            values.options[i + 1].timeRange,
+            options.map(({ location }) => location!),
+            values.excludeLocations
+          )
+        );
+      }
+    }
+    const shortestPath = await findShortestPath(params);
+    setShortestPath(shortestPath);
+  };
+
+  useEffect(() => {
+    const newValuesHash = hash(values);
+    if (newValuesHash !== valuesHash.current) {
+      valuesHash.current = newValuesHash;
+      calculateShortestDistance();
+    }
+  }, [values]);
+
+  console.log("shortest path", shortestPath);
 
   return (
     <StyledEngineProvider injectFirst>
@@ -287,6 +314,7 @@ export const App = () => {
         <FormProvider {...methods}>
           <Box>
             <MenuCard
+              shortestPath={shortestPath}
               isHidden={isHidden}
               handleMenuToggle={handleMenuToggle}
               handleFormSubmit={handleFormSubmit}

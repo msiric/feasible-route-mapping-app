@@ -14,6 +14,7 @@ interface MenuCardProps {
 }
 
 export const MenuCard = ({
+  shortestPath,
   isHidden,
   handleMenuToggle,
   handleFormSubmit,
@@ -44,7 +45,10 @@ export const MenuCard = ({
           }
         ></CardHeader>
         <CardContent className={classes.content}>
-          <IsochroneForm handleFormSubmit={handleFormSubmit} />
+          <IsochroneForm
+            shortestPath={shortestPath}
+            handleFormSubmit={handleFormSubmit}
+          />
         </CardContent>
       </Card>
     </Box>
