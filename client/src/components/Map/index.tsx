@@ -26,7 +26,8 @@ import {
   TileLayer,
   ZoomControl,
 } from "react-leaflet";
-import { Intersection, ShortestPath } from "src/App";
+import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
+import { useShortestPath } from "@contexts/shortestPath";
 import { Option, Location } from "../../App";
 
 interface IntersectionsProps {
@@ -107,10 +108,14 @@ const POLYLINE_TOOLTIP_OPTIONS = (
   },
 ];
 
-const Intersections = memo(({ intersections }: IntersectionsProps) => {
+const Intersections = memo(() => {
+  const isochroneIntersections = useIsochroneIntersections(
+    (state) => state.data
+  );
+
   return (
     <LayerGroup>
-      {intersections.map((intersection, index) => {
+      {isochroneIntersections.map((intersection, index) => {
         const reversedCoordinates = intersection.geometry.coordinates.map(
           (coordinate) => [
             (coordinate as LatLngExpression[])[1],
@@ -139,8 +144,9 @@ const Intersections = memo(({ intersections }: IntersectionsProps) => {
   );
 });
 
-const Route = memo(({ shortestPath }: RouteProps) => {
+const Route = memo(() => {
   const { getValues, setValue } = useFormContext();
+  const shortestPath = useShortestPath((state) => state.data);
 
   const handleLocationShift = (id: number, coordinate: LatLngLiteral) => {
     const values = getValues();
@@ -302,7 +308,7 @@ const Markers = () => {
   );
 };
 
-export const Map = memo(({ shortestPath, intersections }: MapProps) => {
+export const Map = memo(() => {
   return (
     <MapContainer
       id="map"
@@ -316,8 +322,8 @@ export const Map = memo(({ shortestPath, intersections }: MapProps) => {
         url={LEAFLET_TILES_URL}
       />
       <ZoomControl position="topright" />
-      <Intersections intersections={intersections} />
-      <Route shortestPath={shortestPath} />
+      <Intersections />
+      <Route />
       <Markers />
       <MapPopup />
     </MapContainer>

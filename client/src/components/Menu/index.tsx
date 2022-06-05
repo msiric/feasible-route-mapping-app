@@ -3,25 +3,22 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import { IsochroneForm } from "@forms/RouteForm";
 import classes from "@components/Menu/style.module.css";
-import { FieldValues } from "react-hook-form";
 import { ArrowBackIos as ToggleIcon } from "@mui/icons-material";
 import { CardHeader, Typography } from "@mui/material";
+import { useMenuOverlay } from "@contexts/menuOverlay";
+import { useShortestPath } from "@contexts/shortestPath";
 
-interface MenuCardProps {
-  isHidden: boolean;
-  handleMenuToggle: () => void;
-  handleFormSubmit: (value: FieldValues) => Promise<void>;
-}
+export const MenuCard = () => {
+  const shortestPath = useShortestPath((state) => state.data);
 
-export const MenuCard = ({
-  shortestPath,
-  isHidden,
-  handleMenuToggle,
-  handleFormSubmit,
-}: MenuCardProps) => {
+  const isMenuVisible = useMenuOverlay((state) => state.visible);
+  const toggleMenuOverlay = useMenuOverlay((state) => state.toggleMenuOverlay);
+
   return (
     <Box
-      className={`${classes.container} ${isHidden && classes.containerHidden}`}
+      className={`${classes.container} ${
+        !isMenuVisible && classes.containerHidden
+      }`}
     >
       <Card variant="outlined">
         <CardHeader
@@ -33,22 +30,21 @@ export const MenuCard = ({
           }
           action={
             <Box
-              onClick={handleMenuToggle}
+              onClick={toggleMenuOverlay}
               className={`${classes.toggle} ${
-                isHidden && classes.toggleHidden
+                !isMenuVisible && classes.toggleHidden
               }`}
             >
               <ToggleIcon
-                className={`${classes.icon} ${isHidden && classes.iconHidden}`}
+                className={`${classes.icon} ${
+                  !isMenuVisible && classes.iconHidden
+                }`}
               />
             </Box>
           }
         ></CardHeader>
         <CardContent className={classes.content}>
-          <IsochroneForm
-            shortestPath={shortestPath}
-            handleFormSubmit={handleFormSubmit}
-          />
+          <IsochroneForm />
         </CardContent>
       </Card>
     </Box>

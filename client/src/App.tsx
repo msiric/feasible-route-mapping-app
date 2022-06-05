@@ -23,6 +23,7 @@ import useWindowDimensions from "./hooks/useWindowDimensions";
 import hash from "object-hash";
 import { useShortestPath } from "./contexts/shortestPath";
 import { useIsochroneIntersections } from "./contexts/isochroneIntersections";
+import { useMenuOverlay } from "./contexts/menuOverlay";
 
 export const DEFAULT_LOCATION_OPTIONS = {
   location: null,
@@ -80,33 +81,18 @@ const SNACKBAR_OPTIONS: OptionsObject = {
   TransitionComponent: Collapse,
 };
 
-const AUTO_HIDE_MENU_WIDTH = 750;
-
 export const App = () => {
-  const shortestPath = useShortestPath((state) => state.data);
+  const findShortestPath = useShortestPath((state) => state.findShortestPath);
   const breakPathIntoSegments = useShortestPath(
     (state) => state.breakPathIntoSegments
   );
   const shortestPathLoading = useShortestPath((state) => state.loading);
 
-  const isochroneIntersections = useIsochroneIntersections(
-    (state) => state.data
-  );
-  const findIsochroneIntersections = useIsochroneIntersections(
-    (state) => state.findIsochroneIntersections
-  );
-  const resetIsochroneIntersections = useIsochroneIntersections(
-    (state) => state.resetIsochroneIntersections
-  );
   const isochroneIntersectionsLoading = useIsochroneIntersections(
     (state) => state.loading
   );
 
-  const [isHidden, setIsHidden] = useState(false);
-
   const valuesHash = useRef("");
-
-  const { width } = useWindowDimensions();
 
   const methods = useForm<FieldValues>({
     defaultValues: {
@@ -121,62 +107,27 @@ export const App = () => {
 
   const { enqueueSnackbar } = useSnackbar();
 
-  const handleMenuToggle = () => setIsHidden(!isHidden);
-
-  const handleFormSubmit = async (values: FieldValues) => {
-    resetIsochroneIntersections();
-    const params = [];
-    // ensure all the shortest route segments are fetched
-    if (values.options.length - 1 === shortestPath.length) {
-      for (let i = 0; i < values.options.length - 1; i++) {
-        const options: Option[] = values.options.slice(i, i + 2);
-        params.push(
-          applyTransportationMode(
-            values.options[i + 1].transportationMode,
-            values.options[i + 1].timeRange,
-            options.map(({ location }) => location!),
-            values.excludeLocations
-          )
-        );
-      }
-      await findIsochroneIntersections(shortestPath);
-      if (width <= AUTO_HIDE_MENU_WIDTH) setIsHidden(true);
-    } else {
-      // todo handle missing route segments
-      console.log(
-        "length mismatch",
-        values.options.length,
-        shortestPath.length
-      );
+  const handleValuesChange = async () => {
+    const newValuesHash = hash(values);
+    if (newValuesHash !== valuesHash.current) {
+      valuesHash.current = newValuesHash;
+      const options = breakPathIntoSegments(values);
+      await findShortestPath(options);
     }
   };
 
   useEffect(() => {
-    const newValuesHash = hash(values);
-    if (newValuesHash !== valuesHash.current) {
-      valuesHash.current = newValuesHash;
-      breakPathIntoSegments(values);
-    }
+    handleValuesChange();
   }, [values]);
-
-  console.log("shortest path", shortestPath);
 
   return (
     <StyledEngineProvider injectFirst>
       <ThemeProvider theme={theme}>
         <FormProvider {...methods}>
           <Box>
-            <MenuCard
-              shortestPath={shortestPath}
-              isHidden={isHidden}
-              handleMenuToggle={handleMenuToggle}
-              handleFormSubmit={handleFormSubmit}
-            />
-            <LegendCard isHidden={isHidden} />
-            <Map
-              shortestPath={shortestPath}
-              intersections={isochroneIntersections}
-            />
+            <MenuCard />
+            <LegendCard />
+            <Map />
           </Box>
         </FormProvider>
       </ThemeProvider>

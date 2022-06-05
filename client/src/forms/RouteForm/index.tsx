@@ -29,10 +29,10 @@ import { SelectInput } from "@controls/Select";
 import classes from "@forms/RouteForm/style.module.css";
 import { TIME_RANGE_OPTIONS, TRANSPORTATION_MODE_OPTIONS } from "@util/options";
 import { DEFAULT_LOCATION_OPTIONS, Option } from "../../App";
-
-interface IsochroneFormProps {
-  handleFormSubmit: (value: FieldValues) => Promise<void>;
-}
+import { useShortestPath } from "@contexts/shortestPath";
+import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
+import { AUTO_HIDE_MENU_WIDTH, useMenuOverlay } from "@contexts/menuOverlay";
+import useWindowDimensions from "@hooks/useWindowDimensions";
 
 const MINIMUM_NUMBER_OF_WAYPOINTS = 2;
 
@@ -53,10 +53,20 @@ const TRANSPORTATION_MODES = Object.values(TRANSPORTATION_MODE_OPTIONS).map(
   })
 );
 
-export const IsochroneForm = ({
-  shortestPath,
-  handleFormSubmit,
-}: IsochroneFormProps) => {
+export const IsochroneForm = () => {
+  const shortestPath = useShortestPath((state) => state.data);
+
+  const resetIsochroneIntersections = useIsochroneIntersections(
+    (state) => state.resetIsochroneIntersections
+  );
+  const findIsochroneIntersections = useIsochroneIntersections(
+    (state) => state.findIsochroneIntersections
+  );
+
+  const hideMenuOverlay = useMenuOverlay((state) => state.hideMenuOverlay);
+
+  const { width } = useWindowDimensions();
+
   const {
     watch,
     register,
@@ -74,6 +84,14 @@ export const IsochroneForm = ({
   const values = watch();
 
   const containsWaypoints = values.options.length > MINIMUM_NUMBER_OF_WAYPOINTS;
+
+  const handleFormSubmit = async () => {
+    await resetIsochroneIntersections();
+    await findIsochroneIntersections(shortestPath);
+    if (width <= AUTO_HIDE_MENU_WIDTH) {
+      hideMenuOverlay();
+    }
+  };
 
   const formatSegmentDuration = (duration: number, fixedDigits = 0) =>
     !!fixedDigits

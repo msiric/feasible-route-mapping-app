@@ -69,7 +69,12 @@ const initActions = (
         })
       );
 
-      return shortestPath;
+      set((state) => ({
+        ...state,
+        data: shortestPath,
+        loading: false,
+        error: { ...initialState.error },
+      }));
     } catch (err) {
       set((state) => ({
         ...state,
@@ -78,9 +83,8 @@ const initActions = (
       }));
     }
   },
-  breakPathIntoSegments: async (values) => {
+  breakPathIntoSegments: (values) => {
     const params = [];
-    const findShortestPath = get().findShortestPath;
     for (let i = 0; i < values.options.length - 1; i++) {
       if (values.options[i].location && values.options[i + 1].location) {
         const options: Option[] = values.options.slice(i, i + 2);
@@ -94,13 +98,7 @@ const initActions = (
         );
       }
     }
-    const shortestPath = await findShortestPath(params);
-    set((state) => ({
-      ...state,
-      data: shortestPath,
-      loading: false,
-      error: { ...initialState.error },
-    }));
+    return params;
   },
   resetShortestPath: () => {
     set({ ...initialState });
