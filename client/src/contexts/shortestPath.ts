@@ -47,10 +47,15 @@ const initActions = (
     options: CostingOption[]
   ): Promise<ShortestPathData[] | void> => {
     try {
+      set((state) => ({
+        ...state,
+        data: [],
+        loading: true,
+        error: { ...initialState.error },
+      }));
       const shortestSegments = await Promise.all(
         options.map(async (segment) => await fetchRoute(segment))
       );
-
       const shortestPath: ShortestPathData[] = shortestSegments.map(
         ({ features, trip }, index) => ({
           features: features,

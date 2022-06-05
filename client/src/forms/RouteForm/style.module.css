@@ -92,10 +92,23 @@
   text-align: center;
 }
 
+.spacer {
+  width: 100%;
+  margin: 4px 0;
+}
+
 .durationLabel {
   font-size: 10px;
 }
 
+.totalDuration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
 .partition {
-  width: 100%;
+  margin: 0 8px;
+  height: 10px;
 }

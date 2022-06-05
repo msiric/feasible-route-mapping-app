@@ -83,13 +83,18 @@ const initActions = (
     transportationMode: TransportationMode,
     excludedLocations: Location[]
   ) => {
-    const totalTime = duration + range;
-    const upperBound = (totalTime - (totalTime % 60) - 60) / 60;
-    const intervalSteps = Array(upperBound)
-      .fill(1)
-      .map((item, index) => (index + item) * 60);
-
     try {
+      set((state) => ({
+        ...state,
+        data: [],
+        loading: true,
+        error: { ...initialState.error },
+      }));
+      const totalTime = duration + range;
+      const upperBound = (totalTime - (totalTime % 60) - 60) / 60;
+      const intervalSteps = Array(upperBound)
+        .fill(1)
+        .map((item, index) => (index + item) * 60);
       return await Promise.all(
         intervalSteps.map(
           async (time) =>
