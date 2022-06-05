@@ -21,6 +21,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { validationSchema } from "@util/validation";
 import useWindowDimensions from "./hooks/useWindowDimensions";
 import hash from "object-hash";
+import { useShortestPath } from "./contexts/shortestPath";
+import { useIsochroneIntersections } from "./contexts/isochroneIntersections";
 
 export const DEFAULT_LOCATION_OPTIONS = {
   location: null,
@@ -80,39 +82,26 @@ const SNACKBAR_OPTIONS: OptionsObject = {
 
 const AUTO_HIDE_MENU_WIDTH = 750;
 
-const getColor = (value: number) => {
-  const hue = ((1 - value) * 120).toString(10);
-  return ["hsl(", hue, ",100%,50%)"].join("");
-};
-
-const formatIntersection = (
-  coordinate: Position[][],
-  intervals: number,
-  counter: number
-): Intersection => {
-  const coordinates = coordinate.flat();
-  const areaColor = getColor((intervals - counter + 1) / intervals);
-  return {
-    type: "Feature",
-    geometry: {
-      coordinates,
-      type: "Polygon",
-    },
-    properties: {
-      stroke: true,
-      fill: true,
-      fillColor: areaColor,
-      color: areaColor,
-      contour: intervals - counter + 1,
-      area: calcArea(coordinates) || 0,
-    },
-    order: counter,
-  };
-};
-
 export const App = () => {
-  const [shortestPath, setShortestPath] = useState<ShortestPath[]>([]);
-  const [intersections, setIntersections] = useState<Intersection[]>([]);
+  const shortestPath = useShortestPath((state) => state.data);
+  const breakPathIntoSegments = useShortestPath(
+    (state) => state.breakPathIntoSegments
+  );
+  const shortestPathLoading = useShortestPath((state) => state.loading);
+
+  const isochroneIntersections = useIsochroneIntersections(
+    (state) => state.data
+  );
+  const findIsochroneIntersections = useIsochroneIntersections(
+    (state) => state.findIsochroneIntersections
+  );
+  const resetIsochroneIntersections = useIsochroneIntersections(
+    (state) => state.resetIsochroneIntersections
+  );
+  const isochroneIntersectionsLoading = useIsochroneIntersections(
+    (state) => state.loading
+  );
+
   const [isHidden, setIsHidden] = useState(false);
 
   const valuesHash = useRef("");
@@ -134,137 +123,11 @@ export const App = () => {
 
   const handleMenuToggle = () => setIsHidden(!isHidden);
 
-  const fetchSegmentIsochrones = async (
-    locations: Location[],
-    duration: number,
-    range: number,
-    transportationMode: TransportationMode,
-    excludedLocations: Location[]
-  ) => {
-    const totalTime = duration + range;
-    const upperBound = (totalTime - (totalTime % 60) - 60) / 60;
-    const intervalSteps = Array(upperBound)
-      .fill(1)
-      .map((item, index) => (index + item) * 60);
-
-    try {
-      return await Promise.all(
-        intervalSteps.map(
-          async (time) =>
-            await Promise.all(
-              locations.map(async (location, index) => {
-                const params = applyTransportationMode(
-                  transportationMode,
-                  range,
-                  [location],
-                  excludedLocations,
-                  index !== 0,
-                  [{ time: time / 60 }]
-                );
-                return fetchIsochrone(params);
-              })
-            )
-        )
-      );
-    } catch (err) {
-      enqueueSnackbar(toErrorMessage(err), SNACKBAR_OPTIONS);
-      throw err;
-    }
-  };
-
-  const findShortestPath = async (
-    options: CostingOption[]
-  ): Promise<ShortestPath[]> => {
-    try {
-      const shortestSegments = await Promise.all(
-        options.map(async (segment) => await fetchRoute(segment))
-      );
-
-      const shortestPath: ShortestPath[] = shortestSegments.map(
-        ({ features, trip }, index) => ({
-          features: features,
-          duration: trip.legs.reduce(
-            (sum, { summary }) => sum + summary.time,
-            0
-          ),
-          length: trip.legs.reduce(
-            (sum, { summary }) => sum + summary.length,
-            0
-          ),
-          locations: trip.locations.map((location) => location),
-          transportationMode: options[index].costing,
-          excludedLocations: options[index].exclude_locations,
-          timeRange: options[index].time_range ?? 0,
-        })
-      );
-
-      return shortestPath;
-    } catch (err) {
-      enqueueSnackbar(toErrorMessage(err), SNACKBAR_OPTIONS);
-      throw err;
-    }
-  };
-
-  const findIsochroneIntersections = async (path: ShortestPath[]) => {
-    const isochrones = await Promise.all(
-      path.map(
-        async (segment) =>
-          await fetchSegmentIsochrones(
-            segment.locations,
-            segment.duration,
-            segment.timeRange ?? 0,
-            segment.transportationMode,
-            segment.excludedLocations ?? []
-          )
-      )
-    );
-    const intersections: Intersection[] = [];
-    for (const [index, segment] of path.entries()) {
-      const intervals = (segment.timeRange - (segment.timeRange % 60)) / 60;
-      for (let counter = 1; counter <= intervals; counter++) {
-        let start = 0;
-        let end = isochrones[index].length - counter;
-        while (end >= 0) {
-          const originCoordinates =
-            isochrones[index][start][0].features[0].geometry.coordinates;
-          const destinationCoordinates =
-            isochrones[index][end][1].features[0].geometry.coordinates;
-          const calculation = calcIntersection(
-            originCoordinates as Position[],
-            destinationCoordinates as Position[]
-          );
-          if (calculation?.geometry?.coordinates) {
-            if (calculation.geometry.type === "MultiPolygon") {
-              calculation.geometry.coordinates.forEach((coordinate) => {
-                const intersection = formatIntersection(
-                  coordinate as Position[][],
-                  intervals,
-                  counter
-                );
-                intersections.push(intersection);
-              });
-            } else {
-              const intersection = formatIntersection(
-                calculation.geometry.coordinates as Position[][],
-                intervals,
-                counter
-              );
-              intersections.push(intersection);
-            }
-          }
-          start++;
-          end--;
-        }
-      }
-    }
-    return intersections.sort((a, b) => a.order! - b.order!);
-  };
-
   const handleFormSubmit = async (values: FieldValues) => {
-    setIntersections([]);
+    resetIsochroneIntersections();
     const params = [];
     // ensure all the shortest route segments are fetched
-    if (values.options.length === shortestPath.length - 1) {
+    if (values.options.length - 1 === shortestPath.length) {
       for (let i = 0; i < values.options.length - 1; i++) {
         const options: Option[] = values.options.slice(i, i + 2);
         params.push(
@@ -276,38 +139,23 @@ export const App = () => {
           )
         );
       }
-      const intersections = await findIsochroneIntersections(shortestPath);
-      setIntersections(intersections);
+      await findIsochroneIntersections(shortestPath);
       if (width <= AUTO_HIDE_MENU_WIDTH) setIsHidden(true);
     } else {
       // todo handle missing route segments
+      console.log(
+        "length mismatch",
+        values.options.length,
+        shortestPath.length
+      );
     }
-  };
-
-  const calculateShortestDistance = async () => {
-    const params = [];
-    for (let i = 0; i < values.options.length - 1; i++) {
-      if (values.options[i].location && values.options[i + 1].location) {
-        const options: Option[] = values.options.slice(i, i + 2);
-        params.push(
-          applyTransportationMode(
-            values.options[i + 1].transportationMode,
-            values.options[i + 1].timeRange,
-            options.map(({ location }) => location!),
-            values.excludeLocations
-          )
-        );
-      }
-    }
-    const shortestPath = await findShortestPath(params);
-    setShortestPath(shortestPath);
   };
 
   useEffect(() => {
     const newValuesHash = hash(values);
     if (newValuesHash !== valuesHash.current) {
       valuesHash.current = newValuesHash;
-      calculateShortestDistance();
+      breakPathIntoSegments(values);
     }
   }, [values]);
 
@@ -325,7 +173,10 @@ export const App = () => {
               handleFormSubmit={handleFormSubmit}
             />
             <LegendCard isHidden={isHidden} />
-            <Map shortestPath={shortestPath} intersections={intersections} />
+            <Map
+              shortestPath={shortestPath}
+              intersections={isochroneIntersections}
+            />
           </Box>
         </FormProvider>
       </ThemeProvider>
