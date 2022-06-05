@@ -263,20 +263,25 @@ export const App = () => {
   const handleFormSubmit = async (values: FieldValues) => {
     setIntersections([]);
     const params = [];
-    for (let i = 0; i < values.options.length - 1; i++) {
-      const options: Option[] = values.options.slice(i, i + 2);
-      params.push(
-        applyTransportationMode(
-          values.options[i + 1].transportationMode,
-          values.options[i + 1].timeRange,
-          options.map(({ location }) => location!),
-          values.excludeLocations
-        )
-      );
+    // ensure all the shortest route segments are fetched
+    if (values.options.length === shortestPath.length - 1) {
+      for (let i = 0; i < values.options.length - 1; i++) {
+        const options: Option[] = values.options.slice(i, i + 2);
+        params.push(
+          applyTransportationMode(
+            values.options[i + 1].transportationMode,
+            values.options[i + 1].timeRange,
+            options.map(({ location }) => location!),
+            values.excludeLocations
+          )
+        );
+      }
+      const intersections = await findIsochroneIntersections(shortestPath);
+      setIntersections(intersections);
+      if (width <= AUTO_HIDE_MENU_WIDTH) setIsHidden(true);
+    } else {
+      // todo handle missing route segments
     }
-    const intersections = await findIsochroneIntersections(shortestPath);
-    setIntersections(intersections);
-    if (width <= AUTO_HIDE_MENU_WIDTH) setIsHidden(true);
   };
 
   const calculateShortestDistance = async () => {

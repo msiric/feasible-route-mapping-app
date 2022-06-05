@@ -83,3 +83,19 @@
 .excludeLocations {
   margin-top: 20px;
 }
+
+.duration {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.durationLabel {
+  font-size: 10px;
+}
+
+.partition {
+  width: 100%;
+}

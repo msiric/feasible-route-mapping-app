@@ -13,6 +13,7 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemSecondaryAction,
+  Typography,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import {
@@ -73,6 +74,11 @@ export const IsochroneForm = ({
   const values = watch();
 
   const containsWaypoints = values.options.length > MINIMUM_NUMBER_OF_WAYPOINTS;
+
+  const formatSegmentDuration = (duration: number, fixedDigits = 0) =>
+    !!fixedDigits
+      ? parseFloat((duration / 60).toFixed(fixedDigits))
+      : duration / 60;
 
   const handleLocationSwap = (origin: number, destination: number) => {
     if (origin >= 0 && origin < values.options.length) {
@@ -136,10 +142,21 @@ export const IsochroneForm = ({
                       error={!!errors.options?.[index]?.timeRange?.message}
                       helperText={errors.options?.[index]?.timeRange?.message}
                     />
-                    <Box>
-                      {`${(
-                        (shortestPath[index - 1]?.duration ?? 0) / 60
-                      ).toFixed(2)} min`}
+                    <Box className={classes.duration}>
+                      <Typography className={classes.durationLabel}>
+                        {`SP ${formatSegmentDuration(
+                          shortestPath[index - 1]?.duration ?? 0,
+                          2
+                        )} min`}
+                      </Typography>
+                      <Divider className={classes.partition} />
+                      <Typography className={classes.durationLabel}>
+                        {`AT ${formatSegmentDuration(
+                          (shortestPath[index - 1]?.duration ?? 0) +
+                            values.options[index].timeRange,
+                          2
+                        )} min`}
+                      </Typography>
                     </Box>
                     <SelectInput
                       {...register(
@@ -158,6 +175,7 @@ export const IsochroneForm = ({
                       }
                     />
                   </Box>
+
                   <Divider className={classes.divider} orientation="vertical" />
                 </Box>
               )}
@@ -218,6 +236,28 @@ export const IsochroneForm = ({
               </ListItem>
             </Box>
           ))}
+          <Box className={classes.duration}>
+            <Typography className={classes.durationLabel}>
+              {`Total SP ${shortestPath.reduce(
+                (total, segment) =>
+                  total + formatSegmentDuration(segment?.duration ?? 0, 2),
+                0
+              )} min`}
+            </Typography>
+            <Divider className={classes.partition} />
+            <Typography className={classes.durationLabel}>
+              {`Total AT ${shortestPath.reduce(
+                (total, segment, index) =>
+                  total +
+                  formatSegmentDuration(
+                    segment?.duration ??
+                      0 + values.options[index + 1].timeRange,
+                    2
+                  ),
+                0
+              )} min`}
+            </Typography>
+          </Box>
           <Divider className={classes.divider} />
           <Box className={classes.excludeLocations}>
             <AutocompleteInput
