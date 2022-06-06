@@ -1,6 +1,7 @@
 import { fetchAddress } from "@api/endpoints";
 import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
 import { AUTO_HIDE_MENU_WIDTH, useMenuOverlay } from "@contexts/menuOverlay";
+import { usePreviousPath } from "@contexts/previousPath";
 import { Option, useShortestPath } from "@contexts/shortestPath";
 import { AutocompleteInput } from "@controls/Autocomplete";
 import { SelectInput } from "@controls/Select";
@@ -75,6 +76,8 @@ export const IsochroneForm = () => {
 
   const hideMenuOverlay = useMenuOverlay((state) => state.hideMenuOverlay);
 
+  const setPreviousPath = usePreviousPath((state) => state.setPreviousPath);
+
   const { width } = useWindowDimensions();
 
   const {
@@ -108,6 +111,7 @@ export const IsochroneForm = () => {
   };
 
   const handleFormSubmit = async () => {
+    setPreviousPath(shortestPath);
     resetIsochroneIntersections();
     await findIsochroneIntersections(shortestPath);
     if (width <= AUTO_HIDE_MENU_WIDTH) {
@@ -245,7 +249,6 @@ export const IsochroneForm = () => {
                       }
                     />
                   </Box>
-
                   <Divider className={classes.divider} orientation="vertical" />
                 </Box>
               )}

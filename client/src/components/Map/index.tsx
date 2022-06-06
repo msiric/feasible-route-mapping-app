@@ -4,6 +4,7 @@ import { MapPopup } from "@components/Popup";
 import { MapTooltip } from "@components/Tooltip";
 import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
 import { useShortestPath } from "@contexts/shortestPath";
+import { usePreviousPath } from "@contexts/previousPath";
 import {
   AccessTime as TimeIcon,
   ColorLens as ColorIcon,
@@ -132,30 +133,7 @@ const Intersections = memo(() => {
 });
 
 const Route = memo(() => {
-  const { getValues, setValue } = useFormContext();
   const shortestPath = useShortestPath((state) => state.data);
-
-  const handleLocationShift = (id: number, coordinate: LatLngLiteral) => {
-    const values = getValues();
-
-    const { lat, lon } = formatLocation(coordinate);
-    const location = { lat, lon };
-
-    setValue(
-      "options",
-      values.options.map((item: Option, index: number) =>
-        id === index
-          ? {
-              ...item,
-              location: {
-                ...location,
-                display_name: `${location.lat},${location.lon}`,
-              },
-            }
-          : item
-      )
-    );
-  };
 
   return (
     <LayerGroup>
@@ -180,33 +158,64 @@ const Route = memo(() => {
               )}
             />
           </Polyline>
+        </Box>
+      ))}
+    </LayerGroup>
+  );
+});
 
+const PreviousRoute = memo(() => {
+  const previousPath = usePreviousPath((state) => state.data);
+
+  return (
+    <LayerGroup>
+      {previousPath.map((segment, index) => (
+        <>
+          <Box key={`${segment.locations[0]}.${segment.locations[1]}.${index}`}>
+            <Polyline
+              pathOptions={{
+                color:
+                  TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
+                    .color,
+                weight: 4,
+                dashArray: "15",
+                opacity: 0.7,
+              }}
+              positions={segment.features}
+              pane="shadowPane"
+            >
+              <MapTooltip
+                sticky={true}
+                options={POLYLINE_TOOLTIP_OPTIONS(
+                  TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode],
+                  segment
+                )}
+              />
+            </Polyline>
+          </Box>
           <MapMarker
             index={index}
             position={segment.locations[0]}
             isDraggable={false}
             label={index + 1}
-            handleMarkerShift={handleLocationShift}
           />
-          {index === shortestPath.length - 1 && (
+          {index === previousPath.length - 1 && (
             <MapMarker
               index={index + 1}
               position={segment.locations[1]}
               isDraggable={false}
               label={index + 2}
-              handleMarkerShift={handleLocationShift}
             />
           )}
-        </Box>
+        </>
       ))}
-      {shortestPath[0]?.excludedLocations?.map((location, index) => (
+      {previousPath[0]?.excludedLocations?.map((location, index) => (
         <MapMarker
           key={`${location.lat}.${location.lon}`}
           type={MarkerType.EXCLUSION}
           index={index}
           position={location}
           isDraggable={false}
-          handleMarkerShift={handleLocationShift}
         />
       ))}
     </LayerGroup>
@@ -311,6 +320,7 @@ export const Map = memo(() => {
       <ZoomControl position="topright" />
       <Intersections />
       <Route />
+      <PreviousRoute />
       <Markers />
       <MapPopup />
     </MapContainer>

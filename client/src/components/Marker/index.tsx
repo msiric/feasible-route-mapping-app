@@ -20,7 +20,7 @@ interface MapMarkerProps {
   label?: string | number;
   type?: MarkerType;
   opacity?: number;
-  handleMarkerShift: (index: number, coordinate: LatLng) => void;
+  handleMarkerShift?: (index: number, coordinate: LatLng) => void;
 }
 
 const MARKER_ICONS = {
@@ -38,7 +38,7 @@ export const MapMarker = ({
   label,
   type = MarkerType.LOCATION,
   opacity = 1,
-  handleMarkerShift,
+  handleMarkerShift = () => null,
 }: MapMarkerProps) => {
   const markerRef = useRef<MarkerRef | null>(null);
 
