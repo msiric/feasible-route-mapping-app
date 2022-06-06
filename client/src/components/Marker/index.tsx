@@ -1,12 +1,12 @@
 import { useRef } from "react";
 import { Marker, Tooltip } from "react-leaflet";
 import L, { Marker as MarkerRef } from "leaflet";
-import { Location } from "../../App";
 import classes from "@components/Marker/style.module.css";
 import { LatLng } from "leaflet";
 import LocationIcon from "../../assets/location-icon.png";
 import ExclusionIcon from "../../assets/exclusion-icon.png";
 import MarkerShadow from "../../assets/marker-shadow.png";
+import { Location } from "@contexts/shortestPath";
 
 export enum MarkerType {
   LOCATION = "LOCATION",

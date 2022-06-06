@@ -2,6 +2,8 @@ import classes from "@components/Map/style.module.css";
 import { MapMarker, MarkerType } from "@components/Marker";
 import { MapPopup } from "@components/Popup";
 import { MapTooltip } from "@components/Tooltip";
+import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
+import { useShortestPath } from "@contexts/shortestPath";
 import {
   AccessTime as TimeIcon,
   ColorLens as ColorIcon,
@@ -26,22 +28,7 @@ import {
   TileLayer,
   ZoomControl,
 } from "react-leaflet";
-import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
-import { useShortestPath } from "@contexts/shortestPath";
-import { Option, Location } from "../../App";
-
-interface IntersectionsProps {
-  intersections: Intersection[];
-}
-
-interface RouteProps {
-  shortestPath: ShortestPath[];
-}
-
-interface MapProps {
-  shortestPath: ShortestPath[];
-  intersections: Intersection[];
-}
+import { Location, Option, ShortestPathData } from "@contexts/shortestPath";
 
 const MAP_CENTER_COORDINATES: LatLngExpression = [59.436696, 24.744644];
 const LEAFLET_TILES_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -78,7 +65,7 @@ const POLYGON_TOOLTIP_OPTIONS = (regionProperties: Properties) => [
 
 const POLYLINE_TOOLTIP_OPTIONS = (
   transportationMode: TransportationModeOption,
-  pathSegment: ShortestPath
+  pathSegment: ShortestPathData
 ) => [
   {
     icon: transportationMode.icon({

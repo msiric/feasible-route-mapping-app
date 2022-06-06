@@ -1,16 +1,13 @@
+import classes from "@components/Menu/style.module.css";
+import { useMenuOverlay } from "@contexts/menuOverlay";
+import { IsochroneForm } from "@forms/RouteForm";
+import { ArrowBackIos as ToggleIcon } from "@mui/icons-material";
+import { CardHeader, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import { IsochroneForm } from "@forms/RouteForm";
-import classes from "@components/Menu/style.module.css";
-import { ArrowBackIos as ToggleIcon } from "@mui/icons-material";
-import { CardHeader, Typography } from "@mui/material";
-import { useMenuOverlay } from "@contexts/menuOverlay";
-import { useShortestPath } from "@contexts/shortestPath";
 
 export const MenuCard = () => {
-  const shortestPath = useShortestPath((state) => state.data);
-
   const isMenuVisible = useMenuOverlay((state) => state.visible);
   const toggleMenuOverlay = useMenuOverlay((state) => state.toggleMenuOverlay);
 

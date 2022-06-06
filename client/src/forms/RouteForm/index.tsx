@@ -1,9 +1,21 @@
+import { fetchAddress } from "@api/endpoints";
+import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
+import { AUTO_HIDE_MENU_WIDTH, useMenuOverlay } from "@contexts/menuOverlay";
+import { Option, useShortestPath } from "@contexts/shortestPath";
+import { AutocompleteInput } from "@controls/Autocomplete";
+import { SelectInput } from "@controls/Select";
+import classes from "@forms/RouteForm/style.module.css";
+import useWindowDimensions from "@hooks/useWindowDimensions";
 import {
-  useFieldArray,
-  FieldError,
-  FieldValues,
-  useFormContext,
-} from "react-hook-form";
+  AddLocationAlt as AddLocationIcon,
+  ArrowDropDown as ArrowDown,
+  ArrowDropUp as ArrowUp,
+  Autorenew as RefetchIcon,
+  Delete as DeleteIcon,
+  HourglassEmpty as CalculateIcon,
+  Refresh as RecalculateIcon,
+} from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -16,26 +28,9 @@ import {
   ListItemSecondaryAction,
   Typography,
 } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
-import {
-  Delete as DeleteIcon,
-  AddLocationAlt as AddLocationIcon,
-  HourglassEmpty as CalculateIcon,
-  Refresh as RecalculateIcon,
-  Autorenew as RefetchIcon,
-  ArrowDropUp as ArrowUp,
-  ArrowDropDown as ArrowDown,
-} from "@mui/icons-material";
-import { AutocompleteInput } from "@controls/Autocomplete";
-import { fetchAddress } from "@api/endpoints";
-import { SelectInput } from "@controls/Select";
-import classes from "@forms/RouteForm/style.module.css";
 import { TIME_RANGE_OPTIONS, TRANSPORTATION_MODE_OPTIONS } from "@util/options";
-import { DEFAULT_LOCATION_OPTIONS, Option } from "../../App";
-import { useShortestPath } from "@contexts/shortestPath";
-import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
-import { AUTO_HIDE_MENU_WIDTH, useMenuOverlay } from "@contexts/menuOverlay";
-import useWindowDimensions from "@hooks/useWindowDimensions";
+import { FieldError, useFieldArray, useFormContext } from "react-hook-form";
+import { DEFAULT_LOCATION_OPTIONS } from "../../App";
 
 const MINIMUM_NUMBER_OF_WAYPOINTS = 2;
 
@@ -60,6 +55,10 @@ export const IsochroneForm = () => {
   const shortestPath = useShortestPath((state) => state.data);
   const shortestPathError = useShortestPath((state) => state.error);
   const shortestPathLoading = useShortestPath((state) => state.loading);
+  const breakPathIntoSegments = useShortestPath(
+    (state) => state.breakPathIntoSegments
+  );
+  const findShortestPath = useShortestPath((state) => state.findShortestPath);
 
   const isochroneIntersectionsError = useIsochroneIntersections(
     (state) => state.error
@@ -98,18 +97,23 @@ export const IsochroneForm = () => {
 
   const isDisabled = shortestPathLoading || isochroneIntersectionsLoading;
 
+  const formatSegmentDuration = (duration: number, fixedDigits = 0) =>
+    !!fixedDigits
+      ? parseFloat((duration / 60).toFixed(fixedDigits))
+      : duration / 60;
+
+  const handlePathRefetch = async () => {
+    const options = breakPathIntoSegments(values);
+    await findShortestPath(options);
+  };
+
   const handleFormSubmit = async () => {
-    await resetIsochroneIntersections();
+    resetIsochroneIntersections();
     await findIsochroneIntersections(shortestPath);
     if (width <= AUTO_HIDE_MENU_WIDTH) {
       hideMenuOverlay();
     }
   };
-
-  const formatSegmentDuration = (duration: number, fixedDigits = 0) =>
-    !!fixedDigits
-      ? parseFloat((duration / 60).toFixed(fixedDigits))
-      : duration / 60;
 
   const handleLocationSwap = (origin: number, destination: number) => {
     if (origin >= 0 && origin < values.options.length) {
@@ -145,6 +149,54 @@ export const IsochroneForm = () => {
     return;
   };
 
+  const renderDurationLabel = (index?: number) => {
+    if (shortestPathLoading) {
+      return <CircularProgress size={15} />;
+    }
+    const pathDuration: string | number = shortestPathError.retry
+      ? "N/A"
+      : formatSegmentDuration(
+          index
+            ? shortestPath[index - 1]?.duration ?? 0
+            : shortestPath.reduce(
+                (total, segment) => total + (segment?.duration ?? 0),
+                0
+              ),
+          2
+        );
+    const availableTime: string | number = shortestPathError.retry
+      ? "N/A"
+      : formatSegmentDuration(
+          index
+            ? (shortestPath[index - 1]?.duration ?? 0) +
+                values.options[index].timeRange
+            : values.options.reduce(
+                (total: number, option: Option) =>
+                  total + (option?.timeRange ?? 0),
+                0
+              ) +
+                shortestPath.reduce(
+                  (total, segment) => total + (segment?.duration ?? 0),
+                  0
+                ),
+          2
+        );
+    return (
+      <>
+        <Typography className={classes.durationLabel}>
+          {index ? `PD ${pathDuration} min` : `Total PD ${pathDuration} min`}
+        </Typography>
+        <Divider
+          className={index ? classes.spacer : classes.partition}
+          orientation={index ? "horizontal" : "vertical"}
+        />
+        <Typography className={classes.durationLabel}>
+          {index ? `AT ${availableTime} min` : `Total AT ${availableTime} min`}
+        </Typography>
+      </>
+    );
+  };
+
   return (
     <Box className={classes.container}>
       <form
@@ -174,26 +226,7 @@ export const IsochroneForm = () => {
                       helperText={errors.options?.[index]?.timeRange?.message}
                     />
                     <Box className={classes.duration}>
-                      {shortestPathLoading ? (
-                        <CircularProgress size={16} />
-                      ) : (
-                        <>
-                          <Typography className={classes.durationLabel}>
-                            {`SP ${formatSegmentDuration(
-                              shortestPath[index - 1]?.duration ?? 0,
-                              2
-                            )} min`}
-                          </Typography>
-                          <Divider className={classes.spacer} />
-                          <Typography className={classes.durationLabel}>
-                            {`AT ${formatSegmentDuration(
-                              (shortestPath[index - 1]?.duration ?? 0) +
-                                values.options[index].timeRange,
-                              2
-                            )} min`}
-                          </Typography>
-                        </>
-                      )}
+                      {renderDurationLabel(index)}
                     </Box>
                     <SelectInput
                       {...register(
@@ -273,32 +306,8 @@ export const IsochroneForm = () => {
               </ListItem>
             </Box>
           ))}
-          <Box className={classes.totalDuration}>
-            <Typography className={classes.durationLabel}>
-              {`Total SP ${shortestPath.reduce(
-                (total, segment) =>
-                  total + formatSegmentDuration(segment?.duration ?? 0, 2),
-                0
-              )} min`}
-            </Typography>
-            <Divider className={classes.partition} orientation="vertical" />
-            <Typography className={classes.durationLabel}>
-              {console.log(values.options, shortestPath)}
-              {`Total AT ${values.options.reduce(
-                (total, segment, index) =>
-                  index === 0
-                    ? total
-                    : total +
-                      formatSegmentDuration(
-                        segment.timeRange +
-                          (shortestPath[index - 1]?.duration ?? 0),
-                        2
-                      ),
-                0
-              )} min`}
-            </Typography>
-          </Box>
           <Divider className={classes.divider} />
+          <Box className={classes.totalDuration}>{renderDurationLabel()}</Box>
           <Box className={classes.excludeLocations}>
             <AutocompleteInput
               {...register(`excludeLocations` as const, {})}
@@ -334,10 +343,12 @@ export const IsochroneForm = () => {
               color="primary"
               type="button"
               size="small"
-              loading={isDisabled}
+              disabled={isDisabled}
+              loading={shortestPathLoading}
               loadingPosition="start"
               startIcon={<RefetchIcon />}
               variant="outlined"
+              onClick={handlePathRefetch}
             >
               Refetch path
             </LoadingButton>
@@ -346,10 +357,12 @@ export const IsochroneForm = () => {
               color="primary"
               type="button"
               size="small"
-              loading={isDisabled}
+              disabled={isDisabled}
+              loading={isochroneIntersectionsLoading}
               loadingPosition="start"
               startIcon={<RecalculateIcon />}
               variant="outlined"
+              onClick={handleFormSubmit}
             >
               Recalculate
             </LoadingButton>
@@ -358,7 +371,8 @@ export const IsochroneForm = () => {
               color="primary"
               type="submit"
               size="small"
-              loading={isDisabled}
+              disabled={isDisabled}
+              loading={isochroneIntersectionsLoading}
               loadingPosition="start"
               startIcon={<CalculateIcon />}
               variant="outlined"

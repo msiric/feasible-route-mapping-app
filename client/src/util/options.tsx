@@ -7,7 +7,7 @@ import {
   DirectionsBus as BusIcon,
 } from "@mui/icons-material";
 import { ReactElement } from "react";
-import { Location } from "../App";
+import { Location } from "@contexts/shortestPath";
 
 export type TransportationMode =
   | "bicycle"

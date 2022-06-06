@@ -1,37 +1,21 @@
-import { fetchRoute } from "@api/endpoints";
-import { toErrorMessage } from "@util/error";
-import {
-  TransportationMode,
-  CostingOption,
-  applyTransportationMode,
-} from "@util/options";
-import { LatLngExpression } from "leaflet";
 import create, { GetState, SetState } from "zustand";
 
-export interface ShortestPathData {
-  features: LatLngExpression[];
-  duration: number;
-  length: number;
-  locations: Location[];
-  transportationMode: TransportationMode;
-  excludedLocations?: Location[];
-  timeRange: number;
+export interface MenuOverlayState {
+  visible: boolean;
 }
 
-export interface ShortestPathError {
-  retry: boolean;
-  message: string;
+export interface MenuOverlayActions {
+  showMenuOverlay: () => void;
+  hideMenuOverlay: () => void;
+  toggleMenuOverlay: () => void;
+  resetMenuOverlay: () => void;
 }
 
-export interface ShortestPathState {
-  data: ShortestPathData[];
-  loading: boolean;
-  error: ShortestPathError;
-}
+export type MenuOverlayContext = MenuOverlayState & MenuOverlayActions;
 
 export const AUTO_HIDE_MENU_WIDTH = 750;
 
-const initialState: ShortestPathState = {
+const initialState: MenuOverlayState = {
   visible: true,
 };
 
@@ -40,8 +24,8 @@ const initState = () => ({
 });
 
 const initActions = (
-  set: SetState<ShortestPathState>,
-  get: GetState<ShortestPathState>
+  set: SetState<MenuOverlayContext>,
+  get: GetState<MenuOverlayContext>
 ) => ({
   showMenuOverlay: () => {
     set({ visible: true });
@@ -58,7 +42,7 @@ const initActions = (
   },
 });
 
-export const useMenuOverlay = create((set, get) => ({
+export const useMenuOverlay = create<MenuOverlayContext>((set, get) => ({
   ...initState(),
   ...initActions(set, get),
 }));

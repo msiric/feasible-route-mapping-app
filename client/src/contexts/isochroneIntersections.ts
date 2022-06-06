@@ -1,36 +1,41 @@
-import { fetchIsochrone, fetchRoute } from "@api/endpoints";
-import { Position } from "@turf/turf";
+import { fetchIsochrone, Isochrone } from "@api/endpoints";
+import { Location } from "@contexts/shortestPath";
+import { Feature, Geometry, Position } from "@turf/turf";
 import { toErrorMessage } from "@util/error";
 import { calcArea, calcIntersection } from "@util/geometry";
-import {
-  TransportationMode,
-  CostingOption,
-  applyTransportationMode,
-} from "@util/options";
-import { LatLngExpression } from "leaflet";
-import { ShortestPath, Intersection } from "../App";
+import { applyTransportationMode, TransportationMode } from "@util/options";
 import create, { GetState, SetState } from "zustand";
+import { ShortestPathData } from "@contexts/shortestPath";
 
-export interface ShortestPathData {
-  features: LatLngExpression[];
-  duration: number;
-  length: number;
-  locations: Location[];
-  transportationMode: TransportationMode;
-  excludedLocations?: Location[];
-  timeRange: number;
-}
+export type IsochroneIntersectionsData = Feature<Geometry> & {
+  order?: number;
+};
 
-export interface ShortestPathError {
+export interface IsochroneIntersectionsError {
   retry: boolean;
   message: string;
 }
 
-export interface ShortestPathState {
-  data: ShortestPathData[];
+export interface IsochroneIntersectionsState {
+  data: IsochroneIntersectionsData[];
   loading: boolean;
-  error: ShortestPathError;
+  error: IsochroneIntersectionsError;
 }
+
+export interface IsochroneIntersectionsActions {
+  fetchSegmentIsochrones: (
+    locations: Location[],
+    duration: number,
+    range: number,
+    transportationMode: TransportationMode,
+    excludedLocations: Location[]
+  ) => Promise<Isochrone[][]>;
+  findIsochroneIntersections: (path: ShortestPathData[]) => Promise<void>;
+  resetIsochroneIntersections: () => void;
+}
+
+export type IsochroneIntersectionsContext = IsochroneIntersectionsState &
+  IsochroneIntersectionsActions;
 
 const getColor = (value: number) => {
   const hue = ((1 - value) * 120).toString(10);
@@ -41,7 +46,7 @@ const formatIntersection = (
   coordinate: Position[][],
   intervals: number,
   counter: number
-): Intersection => {
+): IsochroneIntersectionsData => {
   const coordinates = coordinate.flat();
   const areaColor = getColor((intervals - counter + 1) / intervals);
   return {
@@ -62,7 +67,7 @@ const formatIntersection = (
   };
 };
 
-const initialState: ShortestPathState = {
+const initialState: IsochroneIntersectionsState = {
   data: [],
   loading: false,
   error: { retry: false, message: "" },
@@ -73,8 +78,8 @@ const initState = () => ({
 });
 
 const initActions = (
-  set: SetState<ShortestPathState>,
-  get: GetState<ShortestPathState>
+  set: SetState<IsochroneIntersectionsContext>,
+  get: GetState<IsochroneIntersectionsContext>
 ) => ({
   fetchSegmentIsochrones: async (
     locations: Location[],
@@ -82,7 +87,7 @@ const initActions = (
     range: number,
     transportationMode: TransportationMode,
     excludedLocations: Location[]
-  ) => {
+  ): Promise<Isochrone[][]> => {
     try {
       set((state) => ({
         ...state,
@@ -114,14 +119,18 @@ const initActions = (
         )
       );
     } catch (err) {
+      const errorMessage = toErrorMessage(err);
       set((state) => ({
         ...state,
         loading: false,
-        error: { retry: true, message: toErrorMessage(err) },
+        error: { retry: true, message: errorMessage },
       }));
+      return [];
     }
   },
-  findIsochroneIntersections: async (path: ShortestPath[]) => {
+  findIsochroneIntersections: async (
+    path: ShortestPathData[]
+  ): Promise<void> => {
     const fetchSegmentIsochrones = get().fetchSegmentIsochrones;
     const isochrones = await Promise.all(
       path.map(
@@ -135,7 +144,7 @@ const initActions = (
           )
       )
     );
-    const intersections: Intersection[] = [];
+    const intersections: IsochroneIntersectionsData[] = [];
     for (const [index, segment] of path.entries()) {
       const intervals = (segment.timeRange - (segment.timeRange % 60)) / 60;
       for (let counter = 1; counter <= intervals; counter++) {
@@ -189,7 +198,9 @@ const initActions = (
   },
 });
 
-export const useIsochroneIntersections = create((set, get) => ({
-  ...initState(),
-  ...initActions(set, get),
-}));
+export const useIsochroneIntersections = create<IsochroneIntersectionsContext>(
+  (set, get) => ({
+    ...initState(),
+    ...initActions(set, get),
+  })
+);

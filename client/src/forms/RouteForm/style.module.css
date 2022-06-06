@@ -1,5 +1,5 @@
 .container {
-  max-height: 331px;
+  max-height: 325px;
   overflow-y: auto;
 }
 
@@ -81,7 +81,7 @@
 }
 
 .excludeLocations {
-  margin-top: 20px;
+  margin-top: 8px;
 }
 
 .duration {
