@@ -121,7 +121,7 @@ export const TRANSPORTATION_MODE_PROPERTIES: TransportationModeOptions = {
 
 export const TIME_RANGE_OPTIONS = {
   min: 0,
-  max: 20,
+  max: 30,
 };
 
 export const TRANSPORTATION_MODE_OPTIONS: CostingOptions = {
