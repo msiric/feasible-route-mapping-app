@@ -1,5 +1,5 @@
 .container {
-  max-height: 331px;
+  max-height: 325px;
   overflow-y: auto;
 }
 
@@ -81,5 +81,34 @@
 }
 
 .excludeLocations {
-  margin-top: 20px;
+  margin-top: 8px;
+}
+
+.duration {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.spacer {
+  width: 100%;
+  margin: 4px 0;
+}
+
+.durationLabel {
+  font-size: 10px;
+}
+
+.totalDuration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.partition {
+  margin: 0 8px;
+  height: 10px;
 }

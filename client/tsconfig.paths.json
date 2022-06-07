@@ -5,6 +5,8 @@
       "@api/*": ["src/api/*"],
       "@components/*": ["src/components/*"],
       "@controls/*": ["src/controls/*"],
+      "@contexts/*": ["src/contexts/*"],
+      "@hooks/*": ["src/hooks/*"],
       "@forms/*": ["src/forms/*"],
       "@styles/*": ["src/styles/*"],
       "@util/*": ["src/util/*"]

@@ -7,7 +7,7 @@ import {
   DirectionsBus as BusIcon,
 } from "@mui/icons-material";
 import { ReactElement } from "react";
-import { Location } from "src/App";
+import { Location } from "@contexts/shortestPath";
 
 export type TransportationMode =
   | "bicycle"
@@ -99,7 +99,7 @@ export const TRANSPORTATION_MODE_PROPERTIES: TransportationModeOptions = {
   },
   auto: {
     label: "Car",
-    color: "#ebf0f7",
+    color: "#8c8c8c",
     icon: (styles = {}) => <CarIcon style={{ ...styles }} />,
   },
   truck: {
@@ -121,7 +121,7 @@ export const TRANSPORTATION_MODE_PROPERTIES: TransportationModeOptions = {
 
 export const TIME_RANGE_OPTIONS = {
   min: 0,
-  max: 20,
+  max: 30,
 };
 
 export const TRANSPORTATION_MODE_OPTIONS: CostingOptions = {

@@ -2,6 +2,9 @@ import classes from "@components/Map/style.module.css";
 import { MapMarker, MarkerType } from "@components/Marker";
 import { MapPopup } from "@components/Popup";
 import { MapTooltip } from "@components/Tooltip";
+import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
+import { useShortestPath } from "@contexts/shortestPath";
+import { usePreviousCalculation } from "@contexts/previousCalculation";
 import {
   AccessTime as TimeIcon,
   ColorLens as ColorIcon,
@@ -26,21 +29,7 @@ import {
   TileLayer,
   ZoomControl,
 } from "react-leaflet";
-import { Intersection, ShortestPath } from "src/App";
-import { Option, Location } from "../../App";
-
-interface IntersectionsProps {
-  intersections: Intersection[];
-}
-
-interface RouteProps {
-  shortestPath: ShortestPath[];
-}
-
-interface MapProps {
-  shortestPath: ShortestPath[];
-  intersections: Intersection[];
-}
+import { Location, Option, ShortestPathData } from "@contexts/shortestPath";
 
 const MAP_CENTER_COORDINATES: LatLngExpression = [59.436696, 24.744644];
 const LEAFLET_TILES_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -77,7 +66,7 @@ const POLYGON_TOOLTIP_OPTIONS = (regionProperties: Properties) => [
 
 const POLYLINE_TOOLTIP_OPTIONS = (
   transportationMode: TransportationModeOption,
-  pathSegment: ShortestPath
+  pathSegment: ShortestPathData
 ) => [
   {
     icon: transportationMode.icon({
@@ -107,10 +96,14 @@ const POLYLINE_TOOLTIP_OPTIONS = (
   },
 ];
 
-const Intersections = memo(({ intersections }: IntersectionsProps) => {
+const Intersections = memo(() => {
+  const isochroneIntersections = useIsochroneIntersections(
+    (state) => state.data
+  );
+
   return (
     <LayerGroup>
-      {intersections.map((intersection, index) => {
+      {isochroneIntersections.map((intersection, index) => {
         const reversedCoordinates = intersection.geometry.coordinates.map(
           (coordinate) => [
             (coordinate as LatLngExpression[])[1],
@@ -139,30 +132,8 @@ const Intersections = memo(({ intersections }: IntersectionsProps) => {
   );
 });
 
-const Route = memo(({ shortestPath }: RouteProps) => {
-  const { getValues, setValue } = useFormContext();
-
-  const handleLocationShift = (id: number, coordinate: LatLngLiteral) => {
-    const values = getValues();
-
-    const { lat, lon } = formatLocation(coordinate);
-    const location = { lat, lon };
-
-    setValue(
-      "options",
-      values.options.map((item: Option, index: number) =>
-        id === index
-          ? {
-              ...item,
-              location: {
-                ...location,
-                display_name: `${location.lat},${location.lon}`,
-              },
-            }
-          : item
-      )
-    );
-  };
+const Route = memo(() => {
+  const shortestPath = useShortestPath((state) => state.data);
 
   return (
     <LayerGroup>
@@ -187,33 +158,64 @@ const Route = memo(({ shortestPath }: RouteProps) => {
               )}
             />
           </Polyline>
+        </Box>
+      ))}
+    </LayerGroup>
+  );
+});
 
+const PreviousRoute = memo(() => {
+  const previousPath = usePreviousCalculation((state) => state.path);
+
+  return (
+    <LayerGroup>
+      {previousPath.map((segment, index) => (
+        <>
+          <Box key={`${segment.locations[0]}.${segment.locations[1]}.${index}`}>
+            <Polyline
+              pathOptions={{
+                color:
+                  TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
+                    .color,
+                weight: 3,
+                dashArray: "10",
+                opacity: 0.6,
+              }}
+              positions={segment.features}
+              pane="shadowPane"
+            >
+              <MapTooltip
+                sticky={true}
+                options={POLYLINE_TOOLTIP_OPTIONS(
+                  TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode],
+                  segment
+                )}
+              />
+            </Polyline>
+          </Box>
           <MapMarker
             index={index}
             position={segment.locations[0]}
             isDraggable={false}
             label={index + 1}
-            handleMarkerShift={handleLocationShift}
           />
-          {index === shortestPath.length - 1 && (
+          {index === previousPath.length - 1 && (
             <MapMarker
               index={index + 1}
               position={segment.locations[1]}
               isDraggable={false}
               label={index + 2}
-              handleMarkerShift={handleLocationShift}
             />
           )}
-        </Box>
+        </>
       ))}
-      {shortestPath[0]?.excludedLocations?.map((location, index) => (
+      {previousPath[0]?.excludedLocations?.map((location, index) => (
         <MapMarker
           key={`${location.lat}.${location.lon}`}
           type={MarkerType.EXCLUSION}
           index={index}
           position={location}
           isDraggable={false}
-          handleMarkerShift={handleLocationShift}
         />
       ))}
     </LayerGroup>
@@ -302,7 +304,7 @@ const Markers = () => {
   );
 };
 
-export const Map = memo(({ shortestPath, intersections }: MapProps) => {
+export const Map = memo(() => {
   return (
     <MapContainer
       id="map"
@@ -316,8 +318,9 @@ export const Map = memo(({ shortestPath, intersections }: MapProps) => {
         url={LEAFLET_TILES_URL}
       />
       <ZoomControl position="topright" />
-      <Intersections intersections={intersections} />
-      <Route shortestPath={shortestPath} />
+      <Intersections />
+      <Route />
+      <PreviousRoute />
       <Markers />
       <MapPopup />
     </MapContainer>

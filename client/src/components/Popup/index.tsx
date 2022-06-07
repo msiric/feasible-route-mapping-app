@@ -4,7 +4,7 @@ import { formatLocation } from "@util/geometry";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { Popup, useMapEvents } from "react-leaflet";
-import { DEFAULT_LOCATION_OPTIONS, Option } from "../../App";
+import { DEFAULT_LOCATION_OPTIONS } from "../../App";
 import classes from "./style.module.css";
 import {
   TripOrigin as AddOriginIcon,
@@ -12,6 +12,8 @@ import {
   EditLocationAlt as EditLocationIcon,
   RemoveCircleOutline as ExcludeLocationIcon,
 } from "@mui/icons-material";
+import { Option } from "@contexts/shortestPath";
+
 interface PopupState {
   lat: number | null;
   lon: number | null;
