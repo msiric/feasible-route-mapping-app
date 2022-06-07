@@ -28,6 +28,10 @@ export const DEFAULT_LOCATION_OPTIONS = {
   transportationMode: "auto",
 };
 
+export const DEFAULT_FORM_VALUES = {
+  options: [{ location: null }, { ...DEFAULT_LOCATION_OPTIONS }],
+  excludeLocations: [],
+};
 export interface FormValues {
   options: Option[];
   excludeLocations: Location[];
@@ -62,8 +66,7 @@ export const App = () => {
 
   const methods = useForm<FieldValues>({
     defaultValues: {
-      options: [{ location: null }, { ...DEFAULT_LOCATION_OPTIONS }],
-      excludeLocations: [],
+      ...DEFAULT_FORM_VALUES,
     },
     mode: "onSubmit",
     resolver: yupResolver(validationSchema),

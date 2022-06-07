@@ -54,6 +54,7 @@ export interface ShortestPathState {
 export interface ShortestPathActions {
   findShortestPath: (options: CostingOption[]) => Promise<void>;
   breakPathIntoSegments: (values: FieldValues) => CostingOption[];
+  setShortestPath: (shortestPath: ShortestPathData[]) => void;
   resetShortestPath: () => void;
 }
 
@@ -133,6 +134,14 @@ const initActions = (
       }
     }
     return params;
+  },
+  setShortestPath: (shortestPath: ShortestPathData[]) => {
+    set((state) => ({
+      ...state,
+      data: shortestPath,
+      loading: false,
+      error: { ...initialState.error },
+    }));
   },
   resetShortestPath: () => {
     set({ ...initialState });

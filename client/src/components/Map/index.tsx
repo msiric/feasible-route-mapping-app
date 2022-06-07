@@ -4,7 +4,7 @@ import { MapPopup } from "@components/Popup";
 import { MapTooltip } from "@components/Tooltip";
 import { useIsochroneIntersections } from "@contexts/isochroneIntersections";
 import { useShortestPath } from "@contexts/shortestPath";
-import { usePreviousPath } from "@contexts/previousPath";
+import { usePreviousCalculation } from "@contexts/previousCalculation";
 import {
   AccessTime as TimeIcon,
   ColorLens as ColorIcon,
@@ -165,7 +165,7 @@ const Route = memo(() => {
 });
 
 const PreviousRoute = memo(() => {
-  const previousPath = usePreviousPath((state) => state.data);
+  const previousPath = usePreviousCalculation((state) => state.path);
 
   return (
     <LayerGroup>
