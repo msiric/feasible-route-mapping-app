@@ -89,6 +89,7 @@ export const IsochroneForm = () => {
     handleSubmit,
     setValue,
     formState: { errors },
+    trigger: triggerValidation,
   } = useFormContext();
 
   const { append, remove } = useFieldArray({
@@ -121,7 +122,7 @@ export const IsochroneForm = () => {
     }
   };
 
-  const handleLocationSwap = (origin: number, destination: number) => {
+  const handleLocationSwap = async (origin: number, destination: number) => {
     if (origin >= 0 && origin < values.options.length) {
       if (destination >= 0 && destination < values.options.length) {
         if (origin !== destination) {
@@ -149,6 +150,7 @@ export const IsochroneForm = () => {
                 : item
             )
           );
+          await triggerValidation();
         }
       }
     }

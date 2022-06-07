@@ -47,7 +47,7 @@ export const MenuActions = () => {
   const revertPreviousState = () => {
     if (!!previousPath.length) {
       resetValues({ ...previousValues });
-      setShortestPath({ ...previousPath });
+      setShortestPath([...previousPath]);
     }
   };
 

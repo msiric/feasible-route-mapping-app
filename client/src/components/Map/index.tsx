@@ -177,9 +177,9 @@ const PreviousRoute = memo(() => {
                 color:
                   TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
                     .color,
-                weight: 4,
-                dashArray: "15",
-                opacity: 0.7,
+                weight: 3,
+                dashArray: "10",
+                opacity: 0.6,
               }}
               positions={segment.features}
               pane="shadowPane"

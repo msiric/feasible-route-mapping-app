@@ -68,7 +68,7 @@ export const App = () => {
     defaultValues: {
       ...DEFAULT_FORM_VALUES,
     },
-    mode: "onSubmit",
+    mode: "onChange",
     resolver: yupResolver(validationSchema),
   });
 

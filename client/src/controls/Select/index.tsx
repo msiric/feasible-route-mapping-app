@@ -35,6 +35,7 @@ export const SelectInput = ({
         <InputLabel id="select-input">{label}</InputLabel>
         <Select
           {...field}
+          MenuProps={{ PaperProps: { sx: { maxHeight: 350 } } }}
           label={label}
           labelId="select-input"
           size="small"

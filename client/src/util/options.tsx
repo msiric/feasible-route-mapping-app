@@ -99,7 +99,7 @@ export const TRANSPORTATION_MODE_PROPERTIES: TransportationModeOptions = {
   },
   auto: {
     label: "Car",
-    color: "#ebf0f7",
+    color: "#8c8c8c",
     icon: (styles = {}) => <CarIcon style={{ ...styles }} />,
   },
   truck: {
