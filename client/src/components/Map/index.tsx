@@ -31,7 +31,7 @@ import {
 } from "react-leaflet";
 import { Location, Option, ShortestPathData } from "@contexts/shortestPath";
 
-const MAP_CENTER_COORDINATES: LatLngExpression = [59.436696, 24.744644];
+const MAP_CENTER_COORDINATES: LatLngExpression = [-34.92877, 138.599957];
 const LEAFLET_TILES_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
 const POLYGON_TOOLTIP_OPTIONS = (regionProperties: Properties) => [
