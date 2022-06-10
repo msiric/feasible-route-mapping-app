@@ -108,3 +108,8 @@ code {
 .leaflet-control-attribution.leaflet-control {
   border-radius: 20px;
 }
+
+.leaflet-pane .leaflet-shadow-pane .leaflet-zoom-animated .leaflet-interactive {
+  filter: drop-shadow(-1px -2px 0px #000) drop-shadow(1px -1px 0px #000)
+    drop-shadow(1px 2px 0px #000) drop-shadow(-1px 1px 0px #000);
+}

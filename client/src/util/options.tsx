@@ -89,32 +89,32 @@ export type TransportationModeOption = {
 export const TRANSPORTATION_MODE_PROPERTIES: TransportationModeOptions = {
   bicycle: {
     label: "Bicycle",
-    color: "#00d1ff",
+    color: "#FF8C00",
     icon: (styles = {}) => <BicycleIcon style={{ ...styles }} />,
   },
   pedestrian: {
     label: "Pedestrian",
-    color: "#a836ff",
+    color: "#FF0000",
     icon: (styles = {}) => <PedestrianIcon style={{ ...styles }} />,
   },
   auto: {
     label: "Car",
-    color: "#8c8c8c",
+    color: "#00FF00",
     icon: (styles = {}) => <CarIcon style={{ ...styles }} />,
   },
   truck: {
     label: "Truck",
-    color: "#fc03ce",
+    color: "#FFFC00",
     icon: (styles = {}) => <TruckIcon style={{ ...styles }} />,
   },
   bus: {
     label: "Bus",
-    color: "#2e7bff",
+    color: "#00FFFF",
     icon: (styles = {}) => <BusIcon style={{ ...styles }} />,
   },
   motor_scooter: {
     label: "Motor scooter",
-    color: "#ebaa6a",
+    color: "#FF00FF",
     icon: (styles = {}) => <MopedIcon style={{ ...styles }} />,
   },
 };

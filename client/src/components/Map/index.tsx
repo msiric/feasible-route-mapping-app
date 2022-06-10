@@ -132,38 +132,6 @@ const Intersections = memo(() => {
   );
 });
 
-const Route = memo(() => {
-  const shortestPath = useShortestPath((state) => state.data);
-
-  return (
-    <LayerGroup>
-      {shortestPath.map((segment, index) => (
-        <Box key={`${segment.locations[0]}.${segment.locations[1]}.${index}`}>
-          <Polyline
-            pathOptions={{
-              color:
-                TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
-                  .color,
-              weight: 5,
-              dashArray: "10",
-            }}
-            positions={segment.features}
-            pane="shadowPane"
-          >
-            <MapTooltip
-              sticky={true}
-              options={POLYLINE_TOOLTIP_OPTIONS(
-                TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode],
-                segment
-              )}
-            />
-          </Polyline>
-        </Box>
-      ))}
-    </LayerGroup>
-  );
-});
-
 const PreviousRoute = memo(() => {
   const previousPath = usePreviousCalculation((state) => state.path);
 
@@ -217,6 +185,38 @@ const PreviousRoute = memo(() => {
           position={location}
           isDraggable={false}
         />
+      ))}
+    </LayerGroup>
+  );
+});
+
+const Route = memo(() => {
+  const shortestPath = useShortestPath((state) => state.data);
+
+  return (
+    <LayerGroup>
+      {shortestPath.map((segment, index) => (
+        <Box key={`${segment.locations[0]}.${segment.locations[1]}.${index}`}>
+          <Polyline
+            pathOptions={{
+              color:
+                TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode]
+                  .color,
+              weight: 5,
+              dashArray: "10",
+            }}
+            positions={segment.features}
+            pane="shadowPane"
+          >
+            <MapTooltip
+              sticky={true}
+              options={POLYLINE_TOOLTIP_OPTIONS(
+                TRANSPORTATION_MODE_PROPERTIES[segment.transportationMode],
+                segment
+              )}
+            />
+          </Polyline>
+        </Box>
       ))}
     </LayerGroup>
   );
@@ -319,8 +319,8 @@ export const Map = memo(() => {
       />
       <ZoomControl position="topright" />
       <Intersections />
-      <Route />
       <PreviousRoute />
+      <Route />
       <Markers />
       <MapPopup />
     </MapContainer>
