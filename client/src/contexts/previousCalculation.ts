@@ -3,6 +3,7 @@ import { LatLngExpression } from "leaflet";
 import create, { GetState, SetState } from "zustand";
 import { Location } from "@contexts/shortestPath";
 import { FieldValues } from "react-hook-form";
+import hashObject from "object-hash";
 
 export interface PreviousCalculationData {
   features: LatLngExpression[];
@@ -17,6 +18,7 @@ export interface PreviousCalculationData {
 export interface PreviousCalculationState {
   path: PreviousCalculationData[];
   values: FieldValues;
+  hash: string;
 }
 
 export interface PreviousCalculationActions {
@@ -33,6 +35,7 @@ export type PreviousCalculationContext = PreviousCalculationState &
 const initialState: PreviousCalculationState = {
   path: [],
   values: [],
+  hash: "",
 };
 
 const initState = () => ({
@@ -47,10 +50,8 @@ const initActions = (
     path: PreviousCalculationData[],
     values: FieldValues
   ) => {
-    set({
-      path,
-      values,
-    });
+    const hash = hashObject(values);
+    set({ path, values, hash });
   },
   resetPreviousCalculation: () => {
     set({ ...initialState });

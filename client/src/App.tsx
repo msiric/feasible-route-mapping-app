@@ -15,7 +15,6 @@ import {
   SnackbarMessage,
   useSnackbar,
 } from "notistack";
-import hash from "object-hash";
 import { useEffect, useRef } from "react";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
 import { useShortestPath } from "./contexts/shortestPath";
@@ -77,11 +76,10 @@ export const App = () => {
   const { enqueueSnackbar } = useSnackbar();
 
   const handleValuesChange = async () => {
-    const newValuesHash = hash(values);
-    if (newValuesHash !== valuesHash.current) {
-      valuesHash.current = newValuesHash;
-      const options = breakPathIntoSegments(values);
-      await findShortestPath(options);
+    const { params, hash } = breakPathIntoSegments(values);
+    if (hash !== valuesHash.current) {
+      valuesHash.current = hash;
+      await findShortestPath(params, hash);
     }
   };
 

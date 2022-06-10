@@ -133,9 +133,12 @@ const Intersections = memo(() => {
 });
 
 const PreviousRoute = memo(() => {
-  const previousPath = usePreviousCalculation((state) => state.path);
+  const routeHash = useShortestPath((state) => state.data.hash);
 
-  return (
+  const previousPath = usePreviousCalculation((state) => state.path);
+  const previousHash = usePreviousCalculation((state) => state.hash);
+
+  return routeHash !== previousHash ? (
     <LayerGroup>
       {previousPath.map((segment, index) => (
         <>
@@ -187,11 +190,11 @@ const PreviousRoute = memo(() => {
         />
       ))}
     </LayerGroup>
-  );
+  ) : null;
 });
 
 const Route = memo(() => {
-  const shortestPath = useShortestPath((state) => state.data);
+  const shortestPath = useShortestPath((state) => state.data.path);
 
   return (
     <LayerGroup>

@@ -8,6 +8,12 @@ import {
 import { LatLngExpression } from "leaflet";
 import { FieldValues } from "react-hook-form";
 import create, { GetState, SetState } from "zustand";
+import hashObject from "object-hash";
+
+export interface PathSegments {
+  params: CostingOption[];
+  hash: string;
+}
 
 export interface Location {
   lat: number;
@@ -46,22 +52,22 @@ export interface ShortestPathError {
 }
 
 export interface ShortestPathState {
-  data: ShortestPathData[];
+  data: { path: ShortestPathData[]; hash: string };
   loading: boolean;
   error: ShortestPathError;
 }
 
 export interface ShortestPathActions {
-  findShortestPath: (options: CostingOption[]) => Promise<void>;
-  breakPathIntoSegments: (values: FieldValues) => CostingOption[];
-  setShortestPath: (shortestPath: ShortestPathData[]) => void;
+  findShortestPath: (options: CostingOption[], hash: string) => Promise<void>;
+  breakPathIntoSegments: (values: FieldValues) => PathSegments;
+  setShortestPath: (shortestPath: ShortestPathData[], hash: string) => void;
   resetShortestPath: () => void;
 }
 
 export type ShortestPathContext = ShortestPathState & ShortestPathActions;
 
 const initialState: ShortestPathState = {
-  data: [],
+  data: { path: [], hash: "" },
   loading: false,
   error: { retry: false, message: "" },
 };
@@ -74,11 +80,14 @@ const initActions = (
   set: SetState<ShortestPathContext>,
   get: GetState<ShortestPathContext>
 ) => ({
-  findShortestPath: async (options: CostingOption[]): Promise<void> => {
+  findShortestPath: async (
+    options: CostingOption[],
+    hash: string
+  ): Promise<void> => {
     try {
       set((state) => ({
         ...state,
-        data: [],
+        data: { path: [], hash: "" },
         loading: true,
         error: { ...initialState.error },
       }));
@@ -105,7 +114,7 @@ const initActions = (
 
       set((state) => ({
         ...state,
-        data: shortestPath,
+        data: { path: shortestPath, hash },
         loading: false,
         error: { ...initialState.error },
       }));
@@ -118,7 +127,8 @@ const initActions = (
       }));
     }
   },
-  breakPathIntoSegments: (values: FieldValues): CostingOption[] => {
+  breakPathIntoSegments: (values: FieldValues): PathSegments => {
+    const hash = hashObject(values);
     const params: CostingOption[] = [];
     for (let i = 0; i < values.options.length - 1; i++) {
       if (values.options[i].location && values.options[i + 1].location) {
@@ -133,12 +143,12 @@ const initActions = (
         );
       }
     }
-    return params;
+    return { params, hash };
   },
-  setShortestPath: (shortestPath: ShortestPathData[]) => {
+  setShortestPath: (shortestPath: ShortestPathData[], hash: string) => {
     set((state) => ({
       ...state,
-      data: shortestPath,
+      data: { path: shortestPath, hash },
       loading: false,
       error: { ...initialState.error },
     }));

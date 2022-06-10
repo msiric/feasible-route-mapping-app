@@ -53,7 +53,7 @@ const TRANSPORTATION_MODES = Object.values(TRANSPORTATION_MODE_OPTIONS).map(
 );
 
 export const IsochroneForm = () => {
-  const shortestPath = useShortestPath((state) => state.data);
+  const shortestPath = useShortestPath((state) => state.data.path);
   const shortestPathError = useShortestPath((state) => state.error);
   const shortestPathLoading = useShortestPath((state) => state.loading);
   const breakPathIntoSegments = useShortestPath(
@@ -109,8 +109,8 @@ export const IsochroneForm = () => {
       : duration / 60;
 
   const handlePathRefetch = async () => {
-    const options = breakPathIntoSegments(values);
-    await findShortestPath(options);
+    const { params, hash } = breakPathIntoSegments(values);
+    await findShortestPath(params, hash);
   };
 
   const handleFormSubmit = async () => {
@@ -192,14 +192,18 @@ export const IsochroneForm = () => {
     return (
       <>
         <Typography className={classes.durationLabel}>
-          {index ? `PD ${pathDuration} min` : `Total PD ${pathDuration} min`}
+          {index
+            ? `PD ${pathDuration} min`
+            : `Total PD (path duration) ${pathDuration} min`}
         </Typography>
         <Divider
           className={index ? classes.spacer : classes.partition}
           orientation={index ? "horizontal" : "vertical"}
         />
         <Typography className={classes.durationLabel}>
-          {index ? `AT ${availableTime} min` : `Total AT ${availableTime} min`}
+          {index
+            ? `AT ${availableTime} min`
+            : `Total AT (available time) ${availableTime} min`}
         </Typography>
       </>
     );

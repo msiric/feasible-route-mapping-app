@@ -28,6 +28,7 @@ export const MenuActions = () => {
   );
 
   const previousPath = usePreviousCalculation((state) => state.path);
+  const previousHash = usePreviousCalculation((state) => state.hash);
   const previousValues = usePreviousCalculation((state) => state.values);
   const resetPreviousCalculation = usePreviousCalculation(
     (state) => state.resetPreviousCalculation
@@ -47,7 +48,7 @@ export const MenuActions = () => {
   const revertPreviousState = () => {
     if (!!previousPath.length) {
       resetValues({ ...previousValues });
-      setShortestPath([...previousPath]);
+      setShortestPath([...previousPath], previousHash);
     }
   };
 
